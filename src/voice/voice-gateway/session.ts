@@ -264,7 +264,7 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
 
   private requireOpenWebSocket(): WebSocket {
     const socket = this.#webSocket;
-    if (!socket || socket.readyState !== 1) {
+    if (socket?.readyState !== 1) {
       throw new VoiceError("VOICE_CONNECTION_FAILED", {
         metadata: { guildId: this.#input.guildId, reason: "voice-websocket-unavailable" },
       });

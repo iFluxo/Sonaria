@@ -113,7 +113,7 @@ export class SonariaHandler extends SonariaBase {
       const query = await plugin.createSearchQuery(song);
       if (!query) throw new SonariaError("CANNOT_GET_SEARCH_QUERY", song.toString());
       const altSong = await this.#searchSong(query, { metadata: song.metadata, member: song.member }, true);
-      if (!altSong || !altSong.stream.playFromSource) throw new SonariaError("NO_RESULT", query || song.toString());
+      if (!altSong?.stream.playFromSource) throw new SonariaError("NO_RESULT", query || song.toString());
       song.stream.song = altSong;
     }
   }

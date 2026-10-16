@@ -270,7 +270,7 @@ export class SonariaVoice extends TypedEmitter<SonariaVoiceEvents> {
     // Volume is applied by FFmpeg, so changing it restarts the stream at the
     // current playback position (mirroring how filters are re-applied).
     const queue = this.voices.queues.get(this.id);
-    if (!queue || !queue.songs.length || queue.stopped) return;
+    if (!queue?.songs.length || queue.stopped) return;
     queue._beginTime = this.playbackTime;
     void queue.play(false);
   }
@@ -299,7 +299,7 @@ export class SonariaVoice extends TypedEmitter<SonariaVoiceEvents> {
       throw new SonariaError("INVALID_TYPE", "boolean", selfDeaf, "selfDeaf");
     }
     const connection = this.#connection;
-    if (!connection || connection.state.status !== "ready") return false;
+    if (connection?.state.status !== "ready") return false;
     await connection.setSelfState({ selfDeaf });
     return true;
   }
@@ -314,7 +314,7 @@ export class SonariaVoice extends TypedEmitter<SonariaVoiceEvents> {
       throw new SonariaError("INVALID_TYPE", "boolean", selfMute, "selfMute");
     }
     const connection = this.#connection;
-    if (!connection || connection.state.status !== "ready") return false;
+    if (connection?.state.status !== "ready") return false;
     await connection.setSelfState({ selfMute });
     return true;
   }
