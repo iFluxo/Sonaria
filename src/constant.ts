@@ -7,7 +7,7 @@ import type { Filters, SonariaOptions } from "./type";
  * Kept in sync with the `version` field of `package.json` by
  * `tests/constant.test.ts`.
  */
-export const version = "0.1.0";
+export const version = "0.1.1";
 
 /**
  * Audio configuration constants.
