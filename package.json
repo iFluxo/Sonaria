@@ -1,0 +1,92 @@
+{
+  "name": "sonaria",
+  "version": "0.1.0",
+  "description": "A powerful Seyfert music library with a native Discord voice implementation, plugin architecture, and integrated FFmpeg audio filters.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "directories": {
+    "lib": "src",
+    "test": "tests"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun run build:js && bun run build:types",
+    "build:js": "bun build ./src/index.ts --outdir ./dist --target bun --format esm --sourcemap=external --external seyfert --external @noble/ciphers --external @noble/curves --external @noble/hashes",
+    "build:types": "tsc --project tsconfig.build.json",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage",
+    "type": "tsc --noEmit",
+    "lint": "biome ci .",
+    "lint:fix": "biome check --write --unsafe",
+    "format": "biome format --write",
+    "update": "bun upgrade",
+    "prepare": "husky",
+    "prepublishOnly": "bun run lint && bun run type && bun run test",
+    "prepack": "bun run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iFluxo/Sonaria.git"
+  },
+  "keywords": [
+    "discord",
+    "seyfert",
+    "music",
+    "voice",
+    "queue",
+    "musicbot",
+    "discord-music-bot",
+    "music-bot",
+    "npm",
+    "bun"
+  ],
+  "author": "Sonaria (https://github.com/iFluxo/Sonaria)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/iFluxo/Sonaria/issues"
+  },
+  "homepage": "https://sonaria.js.org/",
+  "dependencies": {
+    "@noble/ciphers": "^2.3.0",
+    "@noble/curves": "^2.3.0",
+    "@noble/hashes": "^2.3.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.10",
+    "@commitlint/cli": "^20.2.0",
+    "@commitlint/config-conventional": "^20.2.0",
+    "@types/bun": "1.4.3",
+    "husky": "^9.1.7",
+    "nano-staged": "^0.9.0",
+    "seyfert": "^5.1.0",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "seyfert": ">=5.0.0"
+  },
+  "nano-staged": {
+    "*.{ts,js,json}": [
+      "biome check --write --no-errors-on-unmatched"
+    ]
+  },
+  "engines": {
+    "node": ">=24.22.0"
+  },
+  "trustedDependencies": [
+    "@noble/ciphers",
+    "@noble/curves",
+    "@noble/hashes"
+  ]
+}

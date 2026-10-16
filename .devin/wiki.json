@@ -1,0 +1,98 @@
+{
+  "repo_notes": [
+    {
+      "content": "Sonaria is a comprehensive Discord music bot library built for Seyfert. Documentation should prioritize library users (developers building bots), focusing on installation, basic usage, and the public API. All user-facing guides must be kept simple and follow a reference style. Avoid deep technical dives in getting started guides. Complex internal workflows (e.g., Initialization Flow, Playback Workflow) MUST be documented ONLY in the \"Internal Architecture\" section, not in user guides. Plugins are provided by third parties through the Sonaria plugin base classes; do not document package names that are not part of this repository.",
+      "author": "iFluxo"
+    }
+  ],
+  "pages": [
+    {
+      "title": "Project Overview",
+      "purpose": "Provide a high-level introduction to Sonaria, its key features, and why it's a great choice for Discord music bots.",
+      "page_notes": [
+        {
+          "content": "Highlight the plugin architecture, the built-in audio filters and the native voice implementation."
+        }
+      ]
+    },
+    {
+      "title": "Installation",
+      "purpose": "Step-by-step guide for installing Sonaria, Seyfert and FFmpeg.",
+      "parent": "Project Overview"
+    },
+    {
+      "title": "Sonaria Guide",
+      "purpose": "The complete beginner-friendly tutorial for building a music bot with a Seyfert client.",
+      "parent": "Project Overview"
+    },
+    {
+      "title": "Events",
+      "purpose": "Reference for the events emitted by a Sonaria instance, their arguments and typical use cases.",
+      "parent": "Sonaria Guide"
+    },
+    {
+      "title": "Handling Seyfert Events",
+      "purpose": "Guide for reacting to voice state updates and Sonaria events for a better user experience.",
+      "parent": "Sonaria Guide"
+    },
+    {
+      "title": "Plugin System",
+      "purpose": "Explain how Sonaria sources music through plugins and how to register them.",
+      "parent": "Project Overview"
+    },
+    {
+      "title": "Custom Plugins",
+      "purpose": "Guide for advanced users to create their own ExtractorPlugin, InfoExtractorPlugin or PlayableExtractorPlugin.",
+      "parent": "Plugin System"
+    },
+    {
+      "title": "Audio Effects & Filters",
+      "purpose": "Documentation for applying audio filters like bassboost, nightcore, etc.",
+      "page_notes": [
+        {
+          "content": "Explain how to use built-in filters and define custom ones with the customFilters option."
+        }
+      ],
+      "parent": "Sonaria Guide"
+    },
+    {
+      "title": "Frequently Asked Questions",
+      "purpose": "Quick answers to the most common questions about using Sonaria.",
+      "parent": "Project Overview"
+    },
+    {
+      "title": "Internal Architecture",
+      "purpose": "Dedicated section for internal library logic, core classes, and development guidelines. Only relevant for Sonaria contributors.",
+      "page_notes": [
+        {
+          "content": "This section should be isolated from general user guides. This section is the ONLY place for detailed internal workflows like Initialization and Playback flow."
+        }
+      ]
+    },
+    {
+      "title": "Core Logic",
+      "purpose": "Explain internal classes such as SonariaHandler, SonariaStream and SonariaVoice.",
+      "parent": "Internal Architecture"
+    },
+    {
+      "title": "Native Voice",
+      "purpose": "Explain the vendored voice implementation: the voice() Seyfert plugin, VoiceManager, VoiceConnection and the media pipeline.",
+      "parent": "Internal Architecture"
+    },
+    {
+      "title": "Managers",
+      "purpose": "Document internal managers like QueueManager, SonariaVoiceManager and FilterManager.",
+      "parent": "Internal Architecture"
+    },
+    {
+      "title": "Contributing Guide",
+      "purpose": "Instructions for setting up the development environment, running checks and submitting pull requests.",
+      "parent": "Internal Architecture"
+    },
+    {
+      "title": "Dev and Testing",
+      "purpose": "Deep dive into the testing setup (bun:test) and how to mock clients, plugins and voice connections.",
+      "parent": "Internal Architecture"
+    }
+  ]
+}
