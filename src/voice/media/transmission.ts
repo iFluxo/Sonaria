@@ -1,8 +1,8 @@
-import { getOpusPacketSamples, OPUS_SAMPLE_RATE, OPUS_SILENCE_FRAME, OPUS_SILENCE_SAMPLES } from "./opus";
+import { getOpusPacketSamples, OpusSampleRate, OpusSilenceFrame, OpusSilenceSamples } from "./opus";
 import { VoicePlayback, type VoicePlaybackSource } from "./playback";
 
-const SILENCE_FRAME_DURATION_MS = (OPUS_SILENCE_SAMPLES / OPUS_SAMPLE_RATE) * 1_000;
-const SILENCE_FRAME_COUNT = 5;
+const SilenceFrameDurationMs = (OpusSilenceSamples / OpusSampleRate) * 1_000;
+const SilenceFrameCount = 5;
 
 export interface VoiceTransmissionOutput {
   now(): number;
@@ -107,7 +107,7 @@ export class VoiceAudioTransmission {
         if (delayed.kind === "error") throw delayed.error;
         if (delayed.result.done) return;
         const resumeAt = this.#output.now();
-        const elapsedSamples = Math.floor(Math.max(0, resumeAt - terminalAt) * (OPUS_SAMPLE_RATE / 1_000));
+        const elapsedSamples = Math.floor(Math.max(0, resumeAt - terminalAt) * (OpusSampleRate / 1_000));
         if (elapsedSamples > 0) this.#output.advanceTimestamp(elapsedSamples);
         packet = copyOpusPacket(delayed.result.value);
         samples = getOpusPacketSamples(packet);
@@ -156,11 +156,11 @@ export class VoiceAudioTransmission {
   }
 
   private async finishSpeaking(deadline: number): Promise<number> {
-    for (let index = 0; index < SILENCE_FRAME_COUNT; index++) {
-      await this.sleepUntil(deadline + index * SILENCE_FRAME_DURATION_MS);
-      await this.#output.sendFrame(OPUS_SILENCE_FRAME, OPUS_SILENCE_SAMPLES);
+    for (let index = 0; index < SilenceFrameCount; index++) {
+      await this.sleepUntil(deadline + index * SilenceFrameDurationMs);
+      await this.#output.sendFrame(OpusSilenceFrame, OpusSilenceSamples);
     }
-    const terminalAt = deadline + SILENCE_FRAME_COUNT * SILENCE_FRAME_DURATION_MS;
+    const terminalAt = deadline + SilenceFrameCount * SilenceFrameDurationMs;
     await this.sleepUntil(terminalAt);
     this.#output.setSpeaking(false);
     this.#started = false;
@@ -234,7 +234,7 @@ type DeadlineOutcome =
   | { readonly kind: "error"; readonly error: unknown };
 
 function samplesToMilliseconds(samples: number): number {
-  return (samples / OPUS_SAMPLE_RATE) * 1_000;
+  return (samples / OpusSampleRate) * 1_000;
 }
 
 function copyOpusPacket(value: Uint8Array): Uint8Array {

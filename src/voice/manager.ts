@@ -58,7 +58,7 @@ interface VoiceManagerClient extends VoiceGatewayClient {
   logger?: VoiceManagerLogger;
 }
 
-type VoiceOperationKind = "connect" | "move" | "disconnect" | "self-state";
+type VoiceOperationKind = "connect" | "move" | "disconnect" | "SelfState";
 
 interface VoiceOperation {
   readonly kind: VoiceOperationKind;
@@ -158,10 +158,10 @@ export class VoiceManager {
   attach(client: VoiceManagerClient): void {
     if (this.#client === client) return;
     if (this.#client) {
-      throw new VoiceError("VOICE_INVALID_ARGUMENT", {
+      throw new VoiceError("VoiceInvalidArgument", {
         metadata: {
           detail: "A voice plugin instance cannot be installed on more than one Seyfert client.",
-          reason: "plugin-instance-reused",
+          reason: "PluginInstanceReused",
         },
       });
     }
@@ -196,7 +196,7 @@ export class VoiceManager {
     try {
       observation = parseVoiceGatewayObservation(packet, getGatewayClientUserId(this.requireClient()), shardId);
     } catch (caught) {
-      error = toVoiceError(caught, "VOICE_PROTOCOL_ERROR");
+      error = toVoiceError(caught, "VoiceProtocolError");
     }
     if (!observation && !error) return;
     const guildId = observation?.guildId ?? readDispatchGuildId(packet);
@@ -261,7 +261,7 @@ export class VoiceManager {
     if (currentChannelId !== target.channelId) {
       if (!options.move) {
         return Promise.reject(
-          new VoiceError("VOICE_MOVE_REQUIRED", {
+          new VoiceError("VoiceMoveRequired", {
             metadata: {
               guildId: options.guildId,
               channelId: target.channelId,
@@ -328,7 +328,7 @@ export class VoiceManager {
     target: VoiceConnectionTarget,
     key: string,
   ): Promise<VoiceConnection> {
-    record.transport?.abortPlayback(playbackUnavailableError(record.controller.connection, "connection-moving"));
+    record.transport?.abortPlayback(playbackUnavailableError(record.controller.connection, "ConnectionMoving"));
     const operation = this.createOperation(record, "move", key, true, target, snapshotVoiceCoordination(record));
     this.commitState(record, { status: "moving", confirmed: record.controller.connection.state.confirmed!, target });
     void this.sendConnectionIntent(record, operation, target, true);
@@ -341,16 +341,16 @@ export class VoiceManager {
     const state = connection.state;
     const confirmed = state.confirmed;
     if (state.status !== "ready" || !confirmed || !record.transport) {
-      throw new VoiceError("VOICE_NOT_CONNECTED", {
-        metadata: { guildId: connection.guildId, status: state.status, reason: "playback-unavailable" },
+      throw new VoiceError("VoiceNotConnected", {
+        metadata: { guildId: connection.guildId, status: state.status, reason: "PlaybackUnavailable" },
       });
     }
     if (confirmed.suppress || confirmed.selfMute) {
-      throw new VoiceError("VOICE_NOT_CONNECTED", {
+      throw new VoiceError("VoiceNotConnected", {
         metadata: {
           guildId: connection.guildId,
           status: state.status,
-          reason: confirmed.suppress ? "stage-suppressed" : "self-muted",
+          reason: confirmed.suppress ? "StageSuppressed" : "SelfMuted",
         },
       });
     }
@@ -367,13 +367,13 @@ export class VoiceManager {
     const state = connection.state;
     const confirmed = state.confirmed;
     if (state.status !== "ready" || !confirmed || !record.transport) {
-      throw new VoiceError("VOICE_NOT_CONNECTED", {
-        metadata: { guildId: connection.guildId, status: state.status, reason: "receive-unavailable" },
+      throw new VoiceError("VoiceNotConnected", {
+        metadata: { guildId: connection.guildId, status: state.status, reason: "ReceiveUnavailable" },
       });
     }
     if (confirmed.selfDeaf) {
-      throw new VoiceError("VOICE_NOT_CONNECTED", {
-        metadata: { guildId: connection.guildId, status: state.status, reason: "self-deafened" },
+      throw new VoiceError("VoiceNotConnected", {
+        metadata: { guildId: connection.guildId, status: state.status, reason: "SelfDeafened" },
       });
     }
     return record.receiver.subscribe(userId, options);
@@ -400,16 +400,16 @@ export class VoiceManager {
         selfDeaf: target.selfDeaf,
       });
       if (!sent) {
-        throw new VoiceError("VOICE_CONNECTION_FAILED", {
+        throw new VoiceError("VoiceConnectionFailed", {
           metadata: {
             guildId: record.controller.connection.guildId,
             channelId: target.channelId,
-            reason: "gateway-payload-vetoed",
+            reason: "GatewayPayloadVetoed",
           },
         });
       }
     } catch (error) {
-      this.handleIntentSendFailure(record, operation, toVoiceError(error, "VOICE_CONNECTION_FAILED"));
+      this.handleIntentSendFailure(record, operation, toVoiceError(error, "VoiceConnectionFailed"));
     }
   }
 
@@ -418,7 +418,7 @@ export class VoiceManager {
     this.rejectOperation(record, operation, error);
     const confirmed = record.controller.connection.state.confirmed;
     if (!confirmed) {
-      this.destroyRecord(record, "terminal-failure", error);
+      this.destroyRecord(record, "TerminalFailure", error);
       return;
     }
     const wasRecovering =
@@ -446,20 +446,20 @@ export class VoiceManager {
           }
         : undefined;
       const key = desired ? selfStateOperationKey(desired) : "";
-      if (record.operation.kind === "self-state" && record.operation.key === key) {
+      if (record.operation.kind === "SelfState" && record.operation.key === key) {
         return record.operation.promise as Promise<void>;
       }
-      throw operationConflict(connection.guildId, "self-state", record.operation.kind);
+      throw operationConflict(connection.guildId, "SelfState", record.operation.kind);
     }
 
     const confirmed = connection.state.confirmed;
     if (!confirmed || connection.state.status === "disconnecting") {
-      throw new VoiceError("VOICE_NOT_CONNECTED", {
+      throw new VoiceError("VoiceNotConnected", {
         metadata: { guildId: connection.guildId, status: connection.state.status },
       });
     }
     if (connection.state.status === "recovering") {
-      throw operationConflict(connection.guildId, "self-state", "recovery");
+      throw operationConflict(connection.guildId, "SelfState", "recovery");
     }
 
     const desired = {
@@ -467,7 +467,7 @@ export class VoiceManager {
       selfDeaf: options.selfDeaf ?? confirmed.selfDeaf,
     };
     if (sameSelfState(confirmed, desired)) return;
-    const operation = this.createOperation(record, "self-state", selfStateOperationKey(desired), false);
+    const operation = this.createOperation(record, "SelfState", selfStateOperationKey(desired), false);
 
     try {
       const sent = await sendGatewayVoiceState(this.requireClient(), {
@@ -477,13 +477,13 @@ export class VoiceManager {
         selfDeaf: desired.selfDeaf,
       });
       if (!sent) {
-        throw new VoiceError("VOICE_CONNECTION_FAILED", {
-          metadata: { guildId: connection.guildId, operation: "self-state", reason: "gateway-payload-vetoed" },
+        throw new VoiceError("VoiceConnectionFailed", {
+          metadata: { guildId: connection.guildId, operation: "SelfState", reason: "GatewayPayloadVetoed" },
         });
       }
     } catch (error) {
       if (record.operation === operation) {
-        this.rejectOperation(record, operation, toVoiceError(error, "VOICE_CONNECTION_FAILED"));
+        this.rejectOperation(record, operation, toVoiceError(error, "VoiceConnectionFailed"));
       }
     }
 
@@ -494,19 +494,19 @@ export class VoiceManager {
     this.assertOpen();
     const record = this.requireRecord(connection);
     if (userId === getGatewayClientUserId(this.requireClient())) {
-      throw new VoiceError("VOICE_INVALID_ARGUMENT", {
-        metadata: { guildId: connection.guildId, userId, reason: "self-verification" },
+      throw new VoiceError("VoiceInvalidArgument", {
+        metadata: { guildId: connection.guildId, userId, reason: "SelfVerification" },
       });
     }
     const status = connection.state.status;
     if (status !== "ready") {
-      throw new VoiceError("VOICE_VERIFICATION_UNAVAILABLE", {
-        metadata: { guildId: connection.guildId, userId, status, reason: "connection_not_ready" },
+      throw new VoiceError("VoiceVerificationUnavailable", {
+        metadata: { guildId: connection.guildId, userId, status, reason: "ConnectionNotReady" },
       });
     }
     if (!record.transport || connection.voicePrivacyCode === null) {
-      throw new VoiceError("VOICE_VERIFICATION_UNAVAILABLE", {
-        metadata: { guildId: connection.guildId, userId, status, reason: "dave_inactive" },
+      throw new VoiceError("VoiceVerificationUnavailable", {
+        metadata: { guildId: connection.guildId, userId, status, reason: "DaveInactive" },
       });
     }
     let code: string;
@@ -515,23 +515,23 @@ export class VoiceManager {
     } catch (error) {
       const currentStatus = connection.state.status;
       if (currentStatus !== "ready") {
-        throw new VoiceError("VOICE_VERIFICATION_UNAVAILABLE", {
+        throw new VoiceError("VoiceVerificationUnavailable", {
           metadata: {
             guildId: connection.guildId,
             userId,
             status: currentStatus,
-            reason: "connection_not_ready",
+            reason: "ConnectionNotReady",
           },
         });
       }
-      const reason = error instanceof DaveVerificationError ? error.reason : "derivation_failed";
+      const reason = error instanceof DaveVerificationError ? error.reason : "DerivationFailed";
       const cause =
-        reason === "derivation_failed"
+        reason === "DerivationFailed"
           ? error instanceof DaveVerificationError
             ? (error.cause ?? error)
             : error
           : undefined;
-      throw new VoiceError("VOICE_VERIFICATION_UNAVAILABLE", {
+      throw new VoiceError("VoiceVerificationUnavailable", {
         ...(cause === undefined ? {} : { cause }),
         metadata: {
           guildId: connection.guildId,
@@ -543,12 +543,12 @@ export class VoiceManager {
     }
     const currentStatus = connection.state.status;
     if (currentStatus !== "ready") {
-      throw new VoiceError("VOICE_VERIFICATION_UNAVAILABLE", {
+      throw new VoiceError("VoiceVerificationUnavailable", {
         metadata: {
           guildId: connection.guildId,
           userId,
           status: currentStatus,
-          reason: "connection_not_ready",
+          reason: "ConnectionNotReady",
         },
       });
     }
@@ -565,7 +565,7 @@ export class VoiceManager {
       this.rejectOperation(
         record,
         record.operation,
-        new VoiceError("VOICE_OPERATION_CONFLICT", {
+        new VoiceError("VoiceOperationConflict", {
           metadata: { guildId, operation: record.operation.kind, supersededBy: "disconnect" },
         }),
       );
@@ -595,17 +595,17 @@ export class VoiceManager {
         selfDeaf: confirmed?.selfDeaf ?? true,
       });
       if (!sent) {
-        throw new VoiceError("VOICE_CONNECTION_FAILED", {
+        throw new VoiceError("VoiceConnectionFailed", {
           metadata: {
             guildId: record.controller.connection.guildId,
             operation: "disconnect",
-            reason: "gateway-payload-vetoed",
+            reason: "GatewayPayloadVetoed",
           },
         });
       }
     } catch (error) {
       if (record.operation !== operation) return;
-      this.rejectOperation(record, operation, toVoiceError(error, "VOICE_CONNECTION_FAILED"));
+      this.rejectOperation(record, operation, toVoiceError(error, "VoiceConnectionFailed"));
       this.reconcileAfterFailedDisconnect(record, operation);
     }
   }
@@ -613,7 +613,7 @@ export class VoiceManager {
   private reconcileAfterFailedDisconnect(record: VoiceConnectionRecord, operation: VoiceOperation): void {
     const confirmed = record.controller.connection.state.confirmed;
     if (!confirmed) {
-      this.destroyRecord(record, "external-disconnect");
+      this.destroyRecord(record, "ExternalDisconnect");
       return;
     }
     restoreVoiceCoordination(record, operation, confirmed);
@@ -650,7 +650,7 @@ export class VoiceManager {
 
   private handleOperationTimeout(record: VoiceConnectionRecord, operation: VoiceOperation): void {
     if (record.operation !== operation) return;
-    const error = new VoiceError("VOICE_OPERATION_TIMEOUT", {
+    const error = new VoiceError("VoiceOperationTimeout", {
       metadata: {
         guildId: record.controller.connection.guildId,
         operation: operation.kind,
@@ -660,14 +660,14 @@ export class VoiceManager {
     this.rejectOperation(record, operation, error);
 
     const confirmed = record.controller.connection.state.confirmed;
-    if (operation.kind === "self-state") return;
+    if (operation.kind === "SelfState") return;
     if (!record.everReady) {
-      this.destroyRecord(record, "terminal-failure", error);
+      this.destroyRecord(record, "TerminalFailure", error);
       if (operation.kind === "connect" || confirmed) this.bestEffortLeave(record, confirmed);
       return;
     }
     if (!confirmed) {
-      this.destroyRecord(record, operation.kind === "disconnect" ? "explicit-disconnect" : "external-disconnect");
+      this.destroyRecord(record, operation.kind === "disconnect" ? "ExplicitDisconnect" : "ExternalDisconnect");
       return;
     }
     const state = record.controller.connection.state;
@@ -714,7 +714,7 @@ export class VoiceManager {
       this.#client?.logger?.warn("sonaria gateway dispatch", queued.error);
       const record = queued.guildId ? this.#records.get(queued.guildId) : undefined;
       if (record) {
-        this.destroyRecord(record, "terminal-failure", queued.error);
+        this.destroyRecord(record, "TerminalFailure", queued.error);
         this.bestEffortLeave(record, record.controller.connection.state.confirmed);
       }
       return;
@@ -736,18 +736,18 @@ export class VoiceManager {
       const operation = record.operation;
       if (operation?.kind === "disconnect") {
         this.resolveOperation(record, operation, undefined);
-        this.destroyRecord(record, "explicit-disconnect");
+        this.destroyRecord(record, "ExplicitDisconnect");
       } else {
         if (operation) {
           this.rejectOperation(
             record,
             operation,
-            new VoiceError("VOICE_NOT_CONNECTED", {
+            new VoiceError("VoiceNotConnected", {
               metadata: { guildId: observation.guildId, operation: operation.kind },
             }),
           );
         }
-        this.destroyRecord(record, "external-disconnect");
+        this.destroyRecord(record, "ExternalDisconnect");
       }
       return;
     }
@@ -777,11 +777,11 @@ export class VoiceManager {
         this.rejectOperation(
           record,
           operation,
-          new VoiceError("VOICE_OPERATION_CONFLICT", {
+          new VoiceError("VoiceOperationConflict", {
             metadata: {
               guildId: observation.guildId,
               operation: operation.kind,
-              reason: "authoritative-state-overrode-intent",
+              reason: "AuthoritativeStateOverrodeIntent",
             },
           }),
         );
@@ -815,7 +815,7 @@ export class VoiceManager {
     }
 
     const currentOperation = record.operation;
-    if (currentOperation?.kind === "self-state" && currentOperation.generation === observedOperationGeneration) {
+    if (currentOperation?.kind === "SelfState" && currentOperation.generation === observedOperationGeneration) {
       const expected = parseSelfStateOperationKey(currentOperation.key);
       if (sameSelfState(observation.confirmed, expected)) {
         this.resolveOperation(record, currentOperation, undefined);
@@ -823,11 +823,11 @@ export class VoiceManager {
         this.rejectOperation(
           record,
           currentOperation,
-          new VoiceError("VOICE_OPERATION_CONFLICT", {
+          new VoiceError("VoiceOperationConflict", {
             metadata: {
               guildId: observation.guildId,
-              operation: "self-state",
-              reason: "authoritative-state-overrode-intent",
+              operation: "SelfState",
+              reason: "AuthoritativeStateOverrodeIntent",
             },
           }),
         );
@@ -979,7 +979,7 @@ export class VoiceManager {
       this.handleTransportReady(record);
     } catch (error) {
       if (!this.isCurrentTransport(record, generation)) return;
-      this.handleTransportTerminalFailure(record, generation, toVoiceError(error, "VOICE_CONNECTION_FAILED"));
+      this.handleTransportTerminalFailure(record, generation, toVoiceError(error, "VoiceConnectionFailed"));
     }
   }
 
@@ -1037,22 +1037,22 @@ export class VoiceManager {
           this.handleTransportTerminalFailure(
             record,
             generation,
-            new VoiceError("VOICE_CONNECTION_FAILED", {
+            new VoiceError("VoiceConnectionFailed", {
               metadata: {
                 guildId: record.controller.connection.guildId,
-                reason: "gateway-payload-vetoed",
+                reason: "GatewayPayloadVetoed",
               },
             }),
           );
         }
       },
-      error => this.handleTransportTerminalFailure(record, generation, toVoiceError(error, "VOICE_CONNECTION_FAILED")),
+      error => this.handleTransportTerminalFailure(record, generation, toVoiceError(error, "VoiceConnectionFailed")),
     );
   }
 
   private handleTransportTerminalFailure(record: VoiceConnectionRecord, generation: number, error: VoiceError): void {
     if (!this.isCurrentTransport(record, generation)) return;
-    this.destroyRecord(record, "terminal-failure", error);
+    this.destroyRecord(record, "TerminalFailure", error);
     this.bestEffortLeave(record, record.controller.connection.state.confirmed);
   }
 
@@ -1069,7 +1069,7 @@ export class VoiceManager {
   private commitConfirmedState(record: VoiceConnectionRecord, confirmed: VoiceConfirmedState): void {
     if (confirmed.suppress || confirmed.selfMute) {
       record.transport?.abortPlayback(
-        playbackUnavailableError(record.controller.connection, confirmed.suppress ? "stage-suppressed" : "self-muted"),
+        playbackUnavailableError(record.controller.connection, confirmed.suppress ? "StageSuppressed" : "SelfMuted"),
       );
     }
     const state = record.controller.connection.state;
@@ -1126,7 +1126,7 @@ export class VoiceManager {
         record,
         operation,
         error ??
-          new VoiceError("VOICE_CONNECTION_DESTROYED", {
+          new VoiceError("VoiceConnectionDestroyed", {
             metadata: { guildId: record.controller.connection.guildId, reason },
           }),
       );
@@ -1215,7 +1215,7 @@ export class VoiceManager {
   private requireRecord(connection: VoiceConnection): VoiceConnectionRecord {
     const record = this.#records.get(connection.guildId);
     if (!record || record.controller.connection !== connection) {
-      throw new VoiceError("VOICE_CONNECTION_DESTROYED", {
+      throw new VoiceError("VoiceConnectionDestroyed", {
         metadata: { guildId: connection.guildId, status: connection.state.status },
       });
     }
@@ -1224,15 +1224,15 @@ export class VoiceManager {
 
   private requireClient(): VoiceManagerClient {
     if (this.#client) return this.#client;
-    throw new VoiceError("VOICE_RUNTIME_UNSUPPORTED", {
-      metadata: { detail: "The voice manager is not attached to a Seyfert client.", reason: "client-unavailable" },
+    throw new VoiceError("VoiceRuntimeUnsupported", {
+      metadata: { detail: "The voice manager is not attached to a Seyfert client.", reason: "ClientUnavailable" },
     });
   }
 
   private assertOpen(): void {
     if (!this.#closed) return;
-    throw new VoiceError("VOICE_CONNECTION_DESTROYED", {
-      metadata: { detail: "The voice manager has been closed.", reason: "plugin-teardown" },
+    throw new VoiceError("VoiceConnectionDestroyed", {
+      metadata: { detail: "The voice manager has been closed.", reason: "PluginTeardown" },
     });
   }
 
@@ -1246,8 +1246,8 @@ export class VoiceManager {
         this.rejectOperation(
           record,
           operation,
-          new VoiceError("VOICE_CONNECTION_DESTROYED", {
-            metadata: { guildId: record.controller.connection.guildId, reason: "plugin-teardown" },
+          new VoiceError("VoiceConnectionDestroyed", {
+            metadata: { guildId: record.controller.connection.guildId, reason: "PluginTeardown" },
           }),
         );
       }
@@ -1258,7 +1258,7 @@ export class VoiceManager {
       this.commitState(record, {
         status: "destroyed",
         confirmed,
-        reason: "plugin-teardown",
+        reason: "PluginTeardown",
       });
       closeTasks.push(this.stopTransport(record));
     }
@@ -1269,8 +1269,8 @@ export class VoiceManager {
   }
 }
 
-function playbackUnavailableError(connection: VoiceConnection, reason: string): VoiceError<"VOICE_CONNECTION_FAILED"> {
-  return new VoiceError("VOICE_CONNECTION_FAILED", {
+function playbackUnavailableError(connection: VoiceConnection, reason: string): VoiceError<"VoiceConnectionFailed"> {
+  return new VoiceError("VoiceConnectionFailed", {
     metadata: { guildId: connection.guildId, status: connection.state.status, reason },
   });
 }
@@ -1371,7 +1371,7 @@ function hasOperationalTransport(record: VoiceConnectionRecord, confirmed: Voice
 }
 
 function operationConflict(guildId: string, operation: string, activeOperation: string): VoiceError {
-  return new VoiceError("VOICE_OPERATION_CONFLICT", {
+  return new VoiceError("VoiceOperationConflict", {
     metadata: { guildId, operation, activeOperation },
   });
 }

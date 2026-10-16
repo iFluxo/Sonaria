@@ -137,7 +137,7 @@ export class Song<T = unknown> {
 
   set playlist(playlist: Playlist | undefined) {
     if (!(playlist instanceof Playlist)) {
-      throw new SonariaError("INVALID_TYPE", "Playlist", playlist, "Song#playlist");
+      throw new SonariaError("InvalidType", "Playlist", playlist, "Song#playlist");
     }
     this.#playlist = playlist;
   }

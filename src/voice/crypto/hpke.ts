@@ -1,15 +1,10 @@
 import { concatenateBytes } from "../bytes";
 import type { P256KeyPair, VoiceCryptoProvider } from "./provider";
 
-const EMPTY = new Uint8Array();
-const HPKE_VERSION_LABEL = new TextEncoder().encode("HPKE-v1");
-const KEM_SUITE_ID = concatenateBytes(new TextEncoder().encode("KEM"), uint16(0x0010));
-const HPKE_SUITE_ID = concatenateBytes(
-  new TextEncoder().encode("HPKE"),
-  uint16(0x0010),
-  uint16(0x0001),
-  uint16(0x0001),
-);
+const Empty = new Uint8Array();
+const HpkeVersionLabel = new TextEncoder().encode("HPKE-v1");
+const KemSuiteId = concatenateBytes(new TextEncoder().encode("KEM"), uint16(0x0010));
+const HpkeSuiteId = concatenateBytes(new TextEncoder().encode("HPKE"), uint16(0x0010), uint16(0x0001), uint16(0x0001));
 
 export interface HpkeCiphertext {
   readonly kemOutput: Uint8Array;
@@ -17,12 +12,12 @@ export interface HpkeCiphertext {
 }
 
 export function hpkeDeriveP256KeyPair(provider: VoiceCryptoProvider, inputKeyMaterial: Uint8Array): P256KeyPair {
-  const derivationPseudorandomKey = labeledExtract(provider, KEM_SUITE_ID, EMPTY, "dkp_prk", inputKeyMaterial);
+  const derivationPseudorandomKey = labeledExtract(provider, KemSuiteId, Empty, "dkp_prk", inputKeyMaterial);
   try {
     for (let counter = 0; counter <= 0xff; counter++) {
       const secretKey = labeledExpand(
         provider,
-        KEM_SUITE_ID,
+        KemSuiteId,
         derivationPseudorandomKey,
         "candidate",
         Uint8Array.of(counter),
@@ -101,9 +96,9 @@ function extractAndExpand(
   diffieHellmanSecret: Uint8Array,
   kemContext: Uint8Array,
 ): Uint8Array {
-  const eaePseudorandomKey = labeledExtract(provider, KEM_SUITE_ID, EMPTY, "eae_prk", diffieHellmanSecret);
+  const eaePseudorandomKey = labeledExtract(provider, KemSuiteId, Empty, "eae_prk", diffieHellmanSecret);
   try {
-    return labeledExpand(provider, KEM_SUITE_ID, eaePseudorandomKey, "shared_secret", kemContext, 32);
+    return labeledExpand(provider, KemSuiteId, eaePseudorandomKey, "shared_secret", kemContext, 32);
   } finally {
     eraseBytes(eaePseudorandomKey);
   }
@@ -114,14 +109,14 @@ function deriveBaseContext(
   sharedSecret: Uint8Array,
   info: Uint8Array,
 ): { readonly key: Uint8Array; readonly nonce: Uint8Array } {
-  const pskIdHash = labeledExtract(provider, HPKE_SUITE_ID, EMPTY, "psk_id_hash", EMPTY);
-  const infoHash = labeledExtract(provider, HPKE_SUITE_ID, EMPTY, "info_hash", info);
+  const pskIdHash = labeledExtract(provider, HpkeSuiteId, Empty, "psk_id_hash", Empty);
+  const infoHash = labeledExtract(provider, HpkeSuiteId, Empty, "info_hash", info);
   const context = concatenateBytes(Uint8Array.of(0), pskIdHash, infoHash);
-  const secret = labeledExtract(provider, HPKE_SUITE_ID, sharedSecret, "secret", EMPTY);
+  const secret = labeledExtract(provider, HpkeSuiteId, sharedSecret, "secret", Empty);
   try {
     return {
-      key: labeledExpand(provider, HPKE_SUITE_ID, secret, "key", context, 16),
-      nonce: labeledExpand(provider, HPKE_SUITE_ID, secret, "base_nonce", context, 12),
+      key: labeledExpand(provider, HpkeSuiteId, secret, "key", context, 16),
+      nonce: labeledExpand(provider, HpkeSuiteId, secret, "base_nonce", context, 12),
     };
   } finally {
     eraseBytes(secret);
@@ -136,7 +131,7 @@ function labeledExtract(
   inputKeyMaterial: Uint8Array,
 ): Uint8Array {
   return provider.hkdfExtract(
-    concatenateBytes(HPKE_VERSION_LABEL, suiteId, new TextEncoder().encode(label), inputKeyMaterial),
+    concatenateBytes(HpkeVersionLabel, suiteId, new TextEncoder().encode(label), inputKeyMaterial),
     salt,
   );
 }
@@ -151,7 +146,7 @@ function labeledExpand(
 ): Uint8Array {
   return provider.hkdfExpand(
     pseudorandomKey,
-    concatenateBytes(uint16(length), HPKE_VERSION_LABEL, suiteId, new TextEncoder().encode(label), info),
+    concatenateBytes(uint16(length), HpkeVersionLabel, suiteId, new TextEncoder().encode(label), info),
     length,
   );
 }

@@ -276,15 +276,15 @@ describe("Queue", () => {
   describe("repeat mode", () => {
     test("toggles through the repeat modes", () => {
       const { queue } = createQueue();
-      expect(queue.repeatMode).toBe(RepeatMode.DISABLED);
-      expect(queue.setRepeatMode()).toBe(RepeatMode.SONG);
-      expect(queue.setRepeatMode()).toBe(RepeatMode.QUEUE);
-      expect(queue.setRepeatMode()).toBe(RepeatMode.DISABLED);
+      expect(queue.repeatMode).toBe(RepeatMode.Disabled);
+      expect(queue.setRepeatMode()).toBe(RepeatMode.Song);
+      expect(queue.setRepeatMode()).toBe(RepeatMode.Queue);
+      expect(queue.setRepeatMode()).toBe(RepeatMode.Disabled);
     });
 
     test("sets a specific repeat mode and validates input", () => {
       const { queue } = createQueue();
-      expect(queue.setRepeatMode(RepeatMode.QUEUE)).toBe(RepeatMode.QUEUE);
+      expect(queue.setRepeatMode(RepeatMode.Queue)).toBe(RepeatMode.Queue);
       expect(() => queue.setRepeatMode(99 as never)).toThrow(SonariaError);
     });
   });

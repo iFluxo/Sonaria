@@ -1,7 +1,7 @@
 import { concatenateBytes } from "../bytes";
 import type { VoiceCryptoProvider } from "../crypto/provider";
 
-const DAVE_FINGERPRINT_SALT = Uint8Array.of(
+const DaveFingerprintSalt = Uint8Array.of(
   0x24,
   0xca,
   0xb1,
@@ -19,7 +19,7 @@ const DAVE_FINGERPRINT_SALT = Uint8Array.of(
   0x19,
   0x2e,
 );
-const VERIFICATION_VERSION = Uint8Array.of(0, 0);
+const VerificationVersion = Uint8Array.of(0, 0);
 
 export interface DaveVerificationIdentity {
   readonly userId: string;
@@ -58,7 +58,7 @@ export async function deriveDaveVerificationFingerprint(
   const firstInput = createFingerprintInput(first);
   const secondInput = createFingerprintInput(second);
   const ordered = compareBytes(firstInput, secondInput) <= 0 ? [firstInput, secondInput] : [secondInput, firstInput];
-  return provider.scrypt(concatenateBytes(...ordered), DAVE_FINGERPRINT_SALT, {
+  return provider.scrypt(concatenateBytes(...ordered), DaveFingerprintSalt, {
     N: 16_384,
     r: 8,
     p: 2,
@@ -86,7 +86,7 @@ function encodeSnowflake(userId: string, littleEndian: boolean): Uint8Array<Arra
 }
 
 function createFingerprintInput(identity: DaveVerificationIdentity): Uint8Array<ArrayBuffer> {
-  return concatenateBytes(VERIFICATION_VERSION, identity.publicKey, encodeSnowflakeBigEndian(identity.userId));
+  return concatenateBytes(VerificationVersion, identity.publicKey, encodeSnowflakeBigEndian(identity.userId));
 }
 
 function createDisplayableCode(input: Uint8Array, codeLength: number): string {

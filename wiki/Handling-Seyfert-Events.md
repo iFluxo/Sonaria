@@ -56,7 +56,7 @@ import { sonaria } from "./sonaria.js";
 const inactivityTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
 // Start a timer when the queue finishes
-sonaria.on(Events.FINISH, queue => {
+sonaria.on(Events.Finish, queue => {
   const timer = setTimeout(() => {
     queue.voice.leave();
     inactivityTimers.delete(queue.id);
@@ -65,7 +65,7 @@ sonaria.on(Events.FINISH, queue => {
 });
 
 // Clear the timer whenever a new song starts playing
-sonaria.on(Events.PLAY_SONG, queue => {
+sonaria.on(Events.PlaySong, queue => {
   const timer = inactivityTimers.get(queue.id);
   if (timer) {
     clearTimeout(timer);

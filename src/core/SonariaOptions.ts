@@ -15,7 +15,7 @@ export class Options {
   ffmpeg: FFmpegOptions;
   constructor(options: SonariaOptions) {
     if (typeof options !== "object" || Array.isArray(options)) {
-      throw new SonariaError("INVALID_TYPE", "object", options, "SonariaOptions");
+      throw new SonariaError("InvalidType", "object", options, "SonariaOptions");
     }
     const opts = { ...defaultOptions, ...options };
     this.plugins = opts.plugins;
@@ -48,22 +48,22 @@ export class Options {
       const value = (options as Record<string, unknown>)[key];
       if (value === undefined && optionalOptions.has(key)) continue;
       if (key === "plugins" && !Array.isArray(value)) {
-        throw new SonariaError("INVALID_TYPE", "Array<Plugin>", value, `SonariaOptions.${key}`);
+        throw new SonariaError("InvalidType", "Array<Plugin>", value, `SonariaOptions.${key}`);
       } else if (booleanOptions.has(key)) {
         if (typeof value !== "boolean") {
-          throw new SonariaError("INVALID_TYPE", "boolean", value, `SonariaOptions.${key}`);
+          throw new SonariaError("InvalidType", "boolean", value, `SonariaOptions.${key}`);
         }
       } else if (numberOptions.has(key)) {
         if (typeof value !== "number" || Number.isNaN(value)) {
-          throw new SonariaError("INVALID_TYPE", "number", value, `SonariaOptions.${key}`);
+          throw new SonariaError("InvalidType", "number", value, `SonariaOptions.${key}`);
         }
       } else if (stringOptions.has(key)) {
         if (typeof value !== "string") {
-          throw new SonariaError("INVALID_TYPE", "string", value, `SonariaOptions.${key}`);
+          throw new SonariaError("InvalidType", "string", value, `SonariaOptions.${key}`);
         }
       } else if (objectOptions.has(key)) {
         if (typeof value !== "object" || Array.isArray(value)) {
-          throw new SonariaError("INVALID_TYPE", "object", value, `SonariaOptions.${key}`);
+          throw new SonariaError("InvalidType", "object", value, `SonariaOptions.${key}`);
         }
       }
     }
@@ -78,12 +78,12 @@ export class Options {
     }
     const path = opts.ffmpeg?.path ?? "ffmpeg";
     if (typeof path !== "string") {
-      throw new SonariaError("INVALID_TYPE", "string", path, "SonariaOptions.ffmpeg.path");
+      throw new SonariaError("InvalidType", "string", path, "SonariaOptions.ffmpeg.path");
     }
     for (const key of objectKeysOf(args)) {
       const value = (args as Record<string, unknown>)[key];
       if (typeof value !== "object" || value === null || Array.isArray(value)) {
-        throw new SonariaError("INVALID_TYPE", "object", value, `SonariaOptions.ffmpeg.${key}`);
+        throw new SonariaError("InvalidType", "object", value, `SonariaOptions.ffmpeg.${key}`);
       }
       for (const argKey of objectKeysOf(value)) {
         const argValue = (value as Record<string, unknown>)[argKey];
@@ -96,7 +96,7 @@ export class Options {
           argValue !== undefined
         ) {
           throw new SonariaError(
-            "INVALID_TYPE",
+            "InvalidType",
             ["string", "number", "boolean", "Array<string | null | undefined>", "null", "undefined"],
             argValue,
             `SonariaOptions.ffmpeg.${key}.${argKey}`,

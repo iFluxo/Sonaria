@@ -1,4 +1,4 @@
-bun install --frozen-lockfile
+bun install --frozen-lockfile --backend=copyfile
 bun run lint
 bun run type
 bun run test

@@ -2,7 +2,7 @@
 
 ## Sonaria
 
-### 1. `FFMPEG_NOT_INSTALLED`
+### 1. `FfmpegNotInstalled`
 
 #### Reason
 
@@ -33,10 +33,10 @@
   ```ts
   import { Events } from "sonaria";
 
-  sonaria.on(Events.FFMPEG_DEBUG, console.log);
+  sonaria.on(Events.FfmpegDebug, console.log);
   ```
 
-### 3. `VOICE_CONNECT_FAILED`
+### 3. `VoiceConnectFailed`
 
 #### Reason
 
@@ -63,7 +63,7 @@
   ```ts
   import { Events } from "sonaria";
 
-  sonaria.on(Events.INIT_QUEUE, queue => {
+  sonaria.on(Events.InitQueue, queue => {
     queue.autoplay = false;
     queue.setVolume(50);
   });

@@ -80,7 +80,7 @@ describe("QueueManager#create()", () => {
     expect(manager.has(GUILD_ID)).toBe(true);
     expect(manager.get(GUILD_ID)).toBe(queue);
     expect(voice.join).toHaveBeenCalledTimes(1);
-    expect(sonaria.emit).toHaveBeenCalledWith(Events.INIT_QUEUE, queue);
+    expect(sonaria.emit).toHaveBeenCalledWith(Events.InitQueue, queue);
     expect(voice.on).toHaveBeenCalledWith("finish", expect.any(Function));
     expect(voice.on).toHaveBeenCalledWith("error", expect.any(Function));
     expect(voice.on).toHaveBeenCalledWith("disconnect", expect.any(Function));
@@ -103,7 +103,7 @@ describe("QueueManager#handleSongFinish()", () => {
 
     await manager.handleSongFinish(queue);
 
-    expect(sonaria.emit).toHaveBeenCalledWith(Events.FINISH_SONG, queue, songA);
+    expect(sonaria.emit).toHaveBeenCalledWith(Events.FinishSong, queue, songA);
     expect(queue.songs).toEqual([songB]);
     expect(queue.previousSongs).toEqual([songA]);
     expect(voice.play).toHaveBeenCalledTimes(1);
@@ -122,18 +122,18 @@ describe("QueueManager#handleSongFinish()", () => {
     expect(voice.play).toHaveBeenCalledTimes(1);
   });
 
-  test("repeats the song in SONG repeat mode", async () => {
+  test("repeats the song in Song repeat mode", async () => {
     const { manager, sonaria, voice } = setup();
     const queue = new Queue(manager.sonaria, voice as unknown as SonariaVoice);
     const songA = song("a");
     queue.songs = [songA];
-    queue.repeatMode = RepeatMode.SONG;
+    queue.repeatMode = RepeatMode.Song;
 
     await manager.handleSongFinish(queue);
 
     expect(queue.songs).toEqual([songA]);
     expect(queue.previousSongs).toEqual([]);
-    expect(sonaria.emit).toHaveBeenCalledWith(Events.FINISH_SONG, queue, songA);
+    expect(sonaria.emit).toHaveBeenCalledWith(Events.FinishSong, queue, songA);
   });
 
   test("removes the queue when it becomes empty", async () => {
@@ -143,8 +143,8 @@ describe("QueueManager#handleSongFinish()", () => {
 
     await manager.handleSongFinish(queue);
 
-    expect(sonaria.emit).toHaveBeenCalledWith(Events.FINISH, queue);
-    expect(sonaria.emit).toHaveBeenCalledWith(Events.DELETE_QUEUE, queue);
+    expect(sonaria.emit).toHaveBeenCalledWith(Events.Finish, queue);
+    expect(sonaria.emit).toHaveBeenCalledWith(Events.DeleteQueue, queue);
     expect(queue.stopped).toBe(true);
     expect(manager.has(GUILD_ID)).toBe(false);
   });
@@ -163,7 +163,7 @@ describe("QueueManager#handleSongFinish()", () => {
     expect(voice.play).toHaveBeenCalledTimes(1);
   });
 
-  test("emits NO_RELATED when autoplay cannot find a related song", async () => {
+  test("emits NoRelated when autoplay cannot find a related song", async () => {
     const { manager, sonaria, voice } = setup();
     const queue = new Queue(manager.sonaria, voice as unknown as SonariaVoice);
     queue.songs = [song("a", { plugin: null })];
@@ -171,7 +171,7 @@ describe("QueueManager#handleSongFinish()", () => {
 
     await manager.handleSongFinish(queue);
 
-    expect(sonaria.emit).toHaveBeenCalledWith(Events.NO_RELATED, queue, expect.any(SonariaError));
+    expect(sonaria.emit).toHaveBeenCalledWith(Events.NoRelated, queue, expect.any(SonariaError));
     expect(manager.has(GUILD_ID)).toBe(false);
   });
 });
@@ -186,7 +186,7 @@ describe("QueueManager#playSong()", () => {
     await manager.playSong(queue);
 
     expect(voice.play).toHaveBeenCalledTimes(1);
-    expect(sonaria.emit).toHaveBeenCalledWith(Events.PLAY_SONG, queue, songA);
+    expect(sonaria.emit).toHaveBeenCalledWith(Events.PlaySong, queue, songA);
   });
 
   test("stops the queue when there is nothing to play", async () => {

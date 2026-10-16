@@ -31,33 +31,33 @@ export type SonariaClient = Client & { voice: VoiceManager };
 export type Awaitable<T = any> = T | PromiseLike<T>;
 
 export enum Events {
-  ERROR = "error",
-  ADD_LIST = "addList",
-  ADD_SONG = "addSong",
-  PLAY_SONG = "playSong",
-  FINISH_SONG = "finishSong",
-  FINISH = "finish",
-  INIT_QUEUE = "initQueue",
-  NO_RELATED = "noRelated",
-  DISCONNECT = "disconnect",
-  DELETE_QUEUE = "deleteQueue",
-  FFMPEG_DEBUG = "ffmpegDebug",
-  DEBUG = "debug",
+  Error = "error",
+  AddList = "addList",
+  AddSong = "addSong",
+  PlaySong = "playSong",
+  FinishSong = "finishSong",
+  Finish = "finish",
+  InitQueue = "initQueue",
+  NoRelated = "noRelated",
+  Disconnect = "disconnect",
+  DeleteQueue = "deleteQueue",
+  FfmpegDebug = "ffmpegDebug",
+  Debug = "debug",
 }
 
 export type SonariaEvents = {
-  [Events.ADD_LIST]: [queue: Queue, playlist: Playlist];
-  [Events.ADD_SONG]: [queue: Queue, song: Song];
-  [Events.DELETE_QUEUE]: [queue: Queue];
-  [Events.DISCONNECT]: [queue: Queue];
-  [Events.ERROR]: [error: Error, queue: Queue, song: Song | undefined];
-  [Events.FFMPEG_DEBUG]: [debug: string];
-  [Events.DEBUG]: [debug: string];
-  [Events.FINISH]: [queue: Queue];
-  [Events.FINISH_SONG]: [queue: Queue, song: Song];
-  [Events.INIT_QUEUE]: [queue: Queue];
-  [Events.NO_RELATED]: [queue: Queue, error: SonariaError];
-  [Events.PLAY_SONG]: [queue: Queue, song: Song];
+  [Events.AddList]: [queue: Queue, playlist: Playlist];
+  [Events.AddSong]: [queue: Queue, song: Song];
+  [Events.DeleteQueue]: [queue: Queue];
+  [Events.Disconnect]: [queue: Queue];
+  [Events.Error]: [error: Error, queue: Queue, song: Song | undefined];
+  [Events.FfmpegDebug]: [debug: string];
+  [Events.Debug]: [debug: string];
+  [Events.Finish]: [queue: Queue];
+  [Events.FinishSong]: [queue: Queue, song: Song];
+  [Events.InitQueue]: [queue: Queue];
+  [Events.NoRelated]: [queue: Queue, error: SonariaError];
+  [Events.PlaySong]: [queue: Queue, song: Song];
 };
 
 export type TypedSonariaEvents = {
@@ -123,7 +123,7 @@ export type SonariaOptions = {
    */
   plugins?: SonariaPlugin[];
   /**
-   * Whether or not to emit the {@link Events.PLAY_SONG} event when looping a
+   * Whether or not to emit the {@link Events.PlaySong} event when looping a
    * song or when the next song is the same as the previous one.
    */
   emitNewSongOnly?: boolean;
@@ -308,26 +308,26 @@ export interface CustomPlaylistOptions {
 
 /**
  * The repeat mode of a {@link Queue}
- * - `DISABLED` = 0
- * - `SONG` = 1
- * - `QUEUE` = 2
+ * - `Disabled` = 0
+ * - `Song` = 1
+ * - `Queue` = 2
  */
 export enum RepeatMode {
-  DISABLED,
-  SONG,
-  QUEUE,
+  Disabled,
+  Song,
+  Queue,
 }
 
 /**
  * All available plugin types:
- * - `EXTRACTOR` = `"extractor"`: {@link ExtractorPlugin}
- * - `INFO_EXTRACTOR` = `"info-extractor"`: {@link InfoExtractorPlugin}
- * - `PLAYABLE_EXTRACTOR` = `"playable-extractor"`: {@link PlayableExtractorPlugin}
+ * - `Extractor` = `"Extractor"`: {@link ExtractorPlugin}
+ * - `InfoExtractor` = `"InfoExtractor"`: {@link InfoExtractorPlugin}
+ * - `PlayableExtractor` = `"PlayableExtractor"`: {@link PlayableExtractorPlugin}
  */
 export enum PluginType {
-  EXTRACTOR = "extractor",
-  INFO_EXTRACTOR = "info-extractor",
-  PLAYABLE_EXTRACTOR = "playable-extractor",
+  Extractor = "Extractor",
+  InfoExtractor = "InfoExtractor",
+  PlayableExtractor = "PlayableExtractor",
 }
 
 export type SonariaPlugin = ExtractorPlugin | InfoExtractorPlugin | PlayableExtractorPlugin;

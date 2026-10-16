@@ -4,18 +4,18 @@ import { isOpusSilenceFrame } from "../media/opus";
 import { deriveTreeSecret } from "../mls/crypto";
 import { unrefTimer } from "../runtime/adapter";
 
-const EMPTY = new Uint8Array();
-const KEY_SIZE = 16;
-const SECRET_SIZE = 32;
-const TAG_SIZE = 8;
-const NONCE_SIZE = 12;
-const SUPPLEMENTAL_FIXED_SIZE = TAG_SIZE + 1 + 2;
-const MAX_GENERATION_GAP = 250;
-const MAX_MISSING_NONCES = 1_000;
-const MAX_FRAMES_PER_SECOND = 170;
-const GENERATION_NONCE_BITS = 24n;
-const GENERATION_WRAP = 256;
-const OLD_GENERATION_RETENTION_MS = 10_000;
+const Empty = new Uint8Array();
+const KeySize = 16;
+const SecretSize = 32;
+const TagSize = 8;
+const NonceSize = 12;
+const SupplementalFixedSize = TagSize + 1 + 2;
+const MaxGenerationGap = 250;
+const MaxMissingNonces = 1_000;
+const MaxFramesPerSecond = 170;
+const GenerationNonceBits = 24n;
+const GenerationWrap = 256;
+const OldGenerationRetentionMs = 10_000;
 
 interface DaveParsedAudioFrame {
   readonly sealed: Uint8Array;
@@ -38,7 +38,7 @@ export class DaveAudioEncryptor {
   #closed = false;
 
   constructor(provider: VoiceCryptoProvider, baseSecret: Uint8Array) {
-    if (baseSecret.byteLength !== KEY_SIZE) {
+    if (baseSecret.byteLength !== KeySize) {
       throw new TypeError("A DAVE sender ratchet base secret must contain 16 bytes.");
     }
     this.#provider = provider;
@@ -52,11 +52,11 @@ export class DaveAudioEncryptor {
     this.#frameCounter++;
     const { generation, truncatedNonce } = resolveDaveNonce(this.#frameCounter);
     const key = this.getKey(generation);
-    const nonce = new Uint8Array(NONCE_SIZE);
-    new DataView(nonce.buffer).setUint32(NONCE_SIZE - 4, truncatedNonce, true);
-    const ciphertext = this.#provider.aesGcmSeal(key, nonce, EMPTY, frame, TAG_SIZE);
+    const nonce = new Uint8Array(NonceSize);
+    new DataView(nonce.buffer).setUint32(NonceSize - 4, truncatedNonce, true);
+    const ciphertext = this.#provider.aesGcmSeal(key, nonce, Empty, frame, TagSize);
     const encodedNonce = encodeUleb128(truncatedNonce);
-    const supplementalSize = SUPPLEMENTAL_FIXED_SIZE + encodedNonce.byteLength;
+    const supplementalSize = SupplementalFixedSize + encodedNonce.byteLength;
     return concatenateBytes(ciphertext, encodedNonce, Uint8Array.of(supplementalSize, 0xfa, 0xfa));
   }
 
@@ -72,8 +72,8 @@ export class DaveAudioEncryptor {
     if (this.#keyGeneration === generation && this.#key) return this.#key;
     while (this.#nextGeneration <= generation) {
       const currentGeneration = this.#nextGeneration;
-      const key = deriveTreeSecret(this.#provider, this.#nextSecret, "key", currentGeneration, KEY_SIZE);
-      const nextSecret = deriveTreeSecret(this.#provider, this.#nextSecret, "secret", currentGeneration, SECRET_SIZE);
+      const key = deriveTreeSecret(this.#provider, this.#nextSecret, "key", currentGeneration, KeySize);
+      const nextSecret = deriveTreeSecret(this.#provider, this.#nextSecret, "secret", currentGeneration, SecretSize);
       this.#nextSecret.fill(0);
       this.#nextSecret = nextSecret;
       this.#nextGeneration++;
@@ -111,7 +111,7 @@ export class DaveAudioDecryptor {
   #closed = false;
 
   constructor(provider: VoiceCryptoProvider, baseSecret: Uint8Array, now: () => number = Date.now) {
-    if (baseSecret.byteLength !== KEY_SIZE) {
+    if (baseSecret.byteLength !== KeySize) {
       throw new TypeError("A DAVE receiver ratchet base secret must contain 16 bytes.");
     }
     this.#provider = provider;
@@ -124,15 +124,15 @@ export class DaveAudioDecryptor {
     this.assertOpen();
     const announcedGeneration = parsed.truncatedNonce >>> 24;
     const generation = resolveWrappedGeneration(this.#oldestGeneration, announcedGeneration);
-    const fullNonce = (BigInt(generation) << GENERATION_NONCE_BITS) | BigInt(parsed.truncatedNonce & 0x00ff_ffff);
+    const fullNonce = (BigInt(generation) << GenerationNonceBits) | BigInt(parsed.truncatedNonce & 0x00ff_ffff);
     if (!this.canProcessNonce(fullNonce)) return undefined;
     const key = this.getKey(generation);
     if (!key) return undefined;
-    const nonce = new Uint8Array(NONCE_SIZE);
-    new DataView(nonce.buffer).setUint32(NONCE_SIZE - 4, parsed.truncatedNonce, true);
+    const nonce = new Uint8Array(NonceSize);
+    new DataView(nonce.buffer).setUint32(NonceSize - 4, parsed.truncatedNonce, true);
     let plaintext: Uint8Array;
     try {
-      plaintext = this.#provider.aesGcmOpen(key, nonce, EMPTY, parsed.sealed, TAG_SIZE);
+      plaintext = this.#provider.aesGcmOpen(key, nonce, Empty, parsed.sealed, TagSize);
     } catch {
       return undefined;
     }
@@ -161,23 +161,23 @@ export class DaveAudioDecryptor {
 
   private getKey(generation: number): Uint8Array | undefined {
     this.cleanupExpiredKeys();
-    if (generation < this.#oldestGeneration || generation > this.#newestGeneration + MAX_GENERATION_GAP) {
+    if (generation < this.#oldestGeneration || generation > this.#newestGeneration + MaxGenerationGap) {
       return undefined;
     }
     const lifetimeSeconds = Math.max(0, Math.floor((this.#now() - this.#createdAt) / 1_000));
-    const maxLifetimeGeneration = Math.floor((MAX_FRAMES_PER_SECOND * lifetimeSeconds) / 2 ** 24);
+    const maxLifetimeGeneration = Math.floor((MaxFramesPerSecond * lifetimeSeconds) / 2 ** 24);
     if (generation > maxLifetimeGeneration) return undefined;
     while (this.#nextGeneration <= generation) {
       const currentGeneration = this.#nextGeneration;
-      const key = deriveTreeSecret(this.#provider, this.#nextSecret, "key", currentGeneration, KEY_SIZE);
-      const nextSecret = deriveTreeSecret(this.#provider, this.#nextSecret, "secret", currentGeneration, SECRET_SIZE);
+      const key = deriveTreeSecret(this.#provider, this.#nextSecret, "key", currentGeneration, KeySize);
+      const nextSecret = deriveTreeSecret(this.#provider, this.#nextSecret, "secret", currentGeneration, SecretSize);
       this.#nextSecret.fill(0);
       this.#nextSecret = nextSecret;
       this.#nextGeneration++;
       this.#keys.set(
         currentGeneration,
         currentGeneration < this.#newestGeneration
-          ? { key, expiresAt: this.#now() + OLD_GENERATION_RETENTION_MS }
+          ? { key, expiresAt: this.#now() + OldGenerationRetentionMs }
           : { key },
       );
     }
@@ -191,9 +191,9 @@ export class DaveAudioDecryptor {
       this.#newestProcessedNonce = fullNonce;
     } else if (fullNonce > newest) {
       const missingCount = Number(
-        fullNonce - newest - 1n > BigInt(MAX_MISSING_NONCES) ? BigInt(MAX_MISSING_NONCES) : fullNonce - newest - 1n,
+        fullNonce - newest - 1n > BigInt(MaxMissingNonces) ? BigInt(MaxMissingNonces) : fullNonce - newest - 1n,
       );
-      while (this.#missingNonces.size + missingCount > MAX_MISSING_NONCES) {
+      while (this.#missingNonces.size + missingCount > MaxMissingNonces) {
         const oldest = this.#missingNonces.values().next().value;
         if (oldest === undefined) break;
         this.#missingNonces.delete(oldest);
@@ -208,7 +208,7 @@ export class DaveAudioDecryptor {
 
     if (generation <= this.#newestGeneration || !this.#keys.has(generation)) return;
     this.#newestGeneration = generation;
-    const expiresAt = this.#now() + OLD_GENERATION_RETENTION_MS;
+    const expiresAt = this.#now() + OldGenerationRetentionMs;
     for (const [keyGeneration, entry] of this.#keys) {
       if (keyGeneration >= generation) continue;
       entry.expiresAt = Math.min(entry.expiresAt ?? Number.POSITIVE_INFINITY, expiresAt);
@@ -257,12 +257,12 @@ export class DaveAudioDecryptor {
 
 /** @internal */
 export function parseDaveAudioFrame(frame: Uint8Array): DaveParsedAudioFrame | undefined {
-  if (frame.byteLength < SUPPLEMENTAL_FIXED_SIZE + 1) return undefined;
+  if (frame.byteLength < SupplementalFixedSize + 1) return undefined;
   if (frame[frame.byteLength - 2] !== 0xfa || frame[frame.byteLength - 1] !== 0xfa) return undefined;
   const supplementalSize = frame[frame.byteLength - 3] as number;
-  if (supplementalSize < SUPPLEMENTAL_FIXED_SIZE + 1 || supplementalSize >= frame.byteLength) return undefined;
+  if (supplementalSize < SupplementalFixedSize + 1 || supplementalSize >= frame.byteLength) return undefined;
   const supplementalOffset = frame.byteLength - supplementalSize;
-  const nonceOffset = supplementalOffset + TAG_SIZE;
+  const nonceOffset = supplementalOffset + TagSize;
   const nonceEnd = frame.byteLength - 3;
   const truncatedNonce = decodeUleb128(frame, nonceOffset, nonceEnd);
   if (truncatedNonce === undefined) return undefined;
@@ -311,7 +311,7 @@ function decodeUleb128(bytes: Uint8Array, offset: number, end: number): number |
 }
 
 function resolveWrappedGeneration(oldest: number, announced: number): number {
-  const remainder = oldest % GENERATION_WRAP;
-  const factor = Math.floor(oldest / GENERATION_WRAP) + (announced < remainder ? 1 : 0);
-  return factor * GENERATION_WRAP + announced;
+  const remainder = oldest % GenerationWrap;
+  const factor = Math.floor(oldest / GenerationWrap) + (announced < remainder ? 1 : 0);
+  return factor * GenerationWrap + announced;
 }

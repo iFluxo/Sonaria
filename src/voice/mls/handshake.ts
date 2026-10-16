@@ -34,8 +34,8 @@ import {
   WireFormat,
 } from "./protocol";
 
-const EMPTY = new Uint8Array();
-const HASH_LENGTH = 32;
+const Empty = new Uint8Array();
+const HashLength = 32;
 
 export interface MlsSigner {
   sign(label: string, content: Uint8Array): Uint8Array;
@@ -70,7 +70,7 @@ export function createExternalProposalPublicMessage(
     groupId: input.groupId,
     epoch: input.epoch,
     sender: { type: SenderType.External, senderIndex: input.senderIndex },
-    authenticatedData: input.authenticatedData ?? EMPTY,
+    authenticatedData: input.authenticatedData ?? Empty,
     type: ContentType.Proposal,
     proposal: input.proposal,
   };
@@ -112,7 +112,7 @@ export function createSignedMemberCommit(signer: MlsSigner, input: MemberCommitI
     groupId: input.groupContext.groupId,
     epoch: input.groupContext.epoch,
     sender: { type: SenderType.Member, leafIndex: input.leafIndex },
-    authenticatedData: input.authenticatedData ?? EMPTY,
+    authenticatedData: input.authenticatedData ?? Empty,
     type: ContentType.Commit,
     commit: input.commit,
   };
@@ -215,7 +215,7 @@ export function verifyMembershipTag(
   groupContext: MlsGroupContext,
   membershipTag: Uint8Array,
 ): boolean {
-  if (membershipKey.byteLength !== HASH_LENGTH || membershipTag.byteLength !== HASH_LENGTH) return false;
+  if (membershipKey.byteLength !== HashLength || membershipTag.byteLength !== HashLength) return false;
   try {
     if (authenticatedContent.content.sender.type !== SenderType.Member) return false;
     assertMemberContentContext(authenticatedContent.content, groupContext);
@@ -243,7 +243,7 @@ export function verifyGroupInfo(
   groupInfo: MlsGroupInfo,
   signatureKey: Uint8Array,
 ): boolean {
-  if (groupInfo.confirmationTag.byteLength !== HASH_LENGTH) return false;
+  if (groupInfo.confirmationTag.byteLength !== HashLength) return false;
   try {
     return verifyWithLabel(provider, signatureKey, "GroupInfoTBS", encodeGroupInfoTbs(groupInfo), groupInfo.signature);
   } catch {
@@ -259,7 +259,7 @@ export function encryptGroupInfo(
   assertHashLength(welcomeSecret, "MLS welcome secret");
   const { key, nonce } = deriveWelcomeKeyNonceFromSecret(provider, welcomeSecret);
   try {
-    return provider.aesGcmSeal(key, nonce, EMPTY, encodeGroupInfo(groupInfo));
+    return provider.aesGcmSeal(key, nonce, Empty, encodeGroupInfo(groupInfo));
   } finally {
     key.fill(0);
     nonce.fill(0);
@@ -275,7 +275,7 @@ export function decryptGroupInfo(
   const { key, nonce } = deriveWelcomeKeyNonceFromSecret(provider, welcomeSecret);
   let encodedGroupInfo: Uint8Array | undefined;
   try {
-    encodedGroupInfo = provider.aesGcmOpen(key, nonce, EMPTY, encryptedGroupInfo);
+    encodedGroupInfo = provider.aesGcmOpen(key, nonce, Empty, encryptedGroupInfo);
     return decodeGroupInfo(encodedGroupInfo);
   } finally {
     key.fill(0);
@@ -350,8 +350,8 @@ function deriveWelcomeKeyNonceFromSecret(
   welcomeSecret: Uint8Array,
 ): { readonly key: Uint8Array; readonly nonce: Uint8Array } {
   return {
-    key: expandWithLabel(provider, welcomeSecret, "key", EMPTY, 16),
-    nonce: expandWithLabel(provider, welcomeSecret, "nonce", EMPTY, 12),
+    key: expandWithLabel(provider, welcomeSecret, "key", Empty, 16),
+    nonce: expandWithLabel(provider, welcomeSecret, "nonce", Empty, 12),
   };
 }
 
@@ -361,6 +361,6 @@ function assertGroupSecrets(groupSecrets: MlsGroupSecrets): void {
 }
 
 function assertHashLength(value: Uint8Array, name: string): void {
-  if (value.byteLength === HASH_LENGTH) return;
-  throw new TypeError(`${name} must contain ${HASH_LENGTH} bytes.`);
+  if (value.byteLength === HashLength) return;
+  throw new TypeError(`${name} must contain ${HashLength} bytes.`);
 }

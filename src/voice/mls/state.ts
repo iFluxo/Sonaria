@@ -28,7 +28,7 @@ import {
   validateParentHashes,
 } from "./tree";
 
-const EMPTY = new Uint8Array();
+const Empty = new Uint8Array();
 
 export type DaveMlsEpochSecrets = Omit<MlsEpochSecrets, "joinerSecret" | "welcomeSecret">;
 
@@ -120,7 +120,7 @@ export function createInitialDaveMlsGroupState(
     const tree: MlsRatchetTree = Object.freeze([
       Object.freeze({ type: NodeType.Leaf, leafNode: leafMaterial.leafNode }),
     ]);
-    const confirmedTranscriptHash = EMPTY;
+    const confirmedTranscriptHash = Empty;
     const context: MlsGroupContext = Object.freeze({
       version: ProtocolVersion.Mls10,
       cipherSuite: CipherSuite.Dave,

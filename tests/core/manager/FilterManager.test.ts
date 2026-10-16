@@ -132,13 +132,13 @@ describe("FilterManager#set()", () => {
 });
 
 describe("FilterManager#add() invalid filter", () => {
-  test("throws a SonariaError with INVALID_TYPE code", () => {
+  test("throws a SonariaError with InvalidType code", () => {
     const filters = new FilterManager(createQueue());
     try {
       filters.add("invalid");
     } catch (error) {
       expect(error).toBeInstanceOf(SonariaError);
-      expect((error as SonariaError).errorCode).toBe("INVALID_TYPE");
+      expect((error as SonariaError).errorCode).toBe("InvalidType");
       return;
     }
     throw new Error("Expected an error");

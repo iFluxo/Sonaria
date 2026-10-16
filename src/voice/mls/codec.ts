@@ -1,4 +1,4 @@
-const MAXIMUM_VECTOR_LENGTH = 0x3fff_ffff;
+const MaximumVectorLength = 0x3fff_ffff;
 
 export class MlsWriter {
   readonly #chunks: Uint8Array[] = [];
@@ -71,8 +71,8 @@ export class MlsReader {
   readonly #maximumVectorLength: number;
   #offset = 0;
 
-  constructor(data: Uint8Array, maximumVectorLength = MAXIMUM_VECTOR_LENGTH) {
-    assertUnsignedInteger(maximumVectorLength, MAXIMUM_VECTOR_LENGTH, "maximumVectorLength");
+  constructor(data: Uint8Array, maximumVectorLength = MaximumVectorLength) {
+    assertUnsignedInteger(maximumVectorLength, MaximumVectorLength, "maximumVectorLength");
     this.#data = data;
     this.#maximumVectorLength = maximumVectorLength;
   }
@@ -160,7 +160,7 @@ export class MlsReader {
 }
 
 export function encodeVariableLength(value: number): Uint8Array<ArrayBuffer> {
-  assertUnsignedInteger(value, MAXIMUM_VECTOR_LENGTH, "MLS vector length");
+  assertUnsignedInteger(value, MaximumVectorLength, "MLS vector length");
   if (value < 0x40) return Uint8Array.of(value);
   if (value < 0x4000) {
     const output = new Uint8Array(2);

@@ -9,7 +9,7 @@ import type {
 import { SonariaError } from "./struct/SonariaError";
 import type { GuildIdResolvable, SonariaClient } from "./type";
 
-const SNOWFLAKE_PATTERN = /^\d{17,20}$/;
+const SnowflakePattern = /^\d{17,20}$/;
 
 const formatInt = (int: number) => (int < 10 ? `0${int}` : int);
 
@@ -26,16 +26,16 @@ export function formatDuration(sec: number): string {
   if (minutes > 0) return `${formatInt(minutes)}:${formatInt(seconds)}`;
   return `00:${formatInt(seconds)}`;
 }
-const SUPPORTED_PROTOCOL = ["https:", "http:", "file:"] as const;
+const SupportedProtocol = ["https:", "http:", "file:"] as const;
 /**
  * Check if the string is an URL
  * @param input - input
  */
-export function isURL(input: unknown): input is `${(typeof SUPPORTED_PROTOCOL)[number]}//${string}` {
+export function isURL(input: unknown): input is `${(typeof SupportedProtocol)[number]}//${string}` {
   if (typeof input !== "string" || input.includes(" ")) return false;
   try {
     const url = new URL(input);
-    if (!SUPPORTED_PROTOCOL.some(p => p === url.protocol)) return false;
+    if (!SupportedProtocol.some(p => p === url.protocol)) return false;
   } catch {
     return false;
   }
@@ -64,7 +64,7 @@ export function isVoicePluginInstalled(client: unknown): client is SonariaClient
  * @param client - Seyfert client
  */
 export function checkVoicePlugin(client: unknown): asserts client is SonariaClient {
-  if (!isVoicePluginInstalled(client)) throw new SonariaError("VOICE_PLUGIN_MISSING");
+  if (!isVoicePluginInstalled(client)) throw new SonariaError("VoicePluginMissing");
 }
 
 /**
@@ -91,7 +91,7 @@ export function isVoiceChannelEmpty(voiceState: VoiceState): boolean {
  * Check if the input is a valid Discord snowflake string.
  */
 export function isSnowflake(id: unknown): id is string {
-  return typeof id === "string" && SNOWFLAKE_PATTERN.test(id);
+  return typeof id === "string" && SnowflakePattern.test(id);
 }
 
 export function isMemberInstance(member: any): member is GuildMember {
@@ -154,7 +154,7 @@ export function resolveGuildId(resolvable: GuildIdResolvable): string {
       guildId = (candidate.guild as { id: string }).id;
     }
   }
-  if (!isSnowflake(guildId)) throw new SonariaError("INVALID_TYPE", "GuildIdResolvable", resolvable);
+  if (!isSnowflake(guildId)) throw new SonariaError("InvalidType", "GuildIdResolvable", resolvable);
   return guildId;
 }
 
@@ -172,10 +172,10 @@ export function checkInvalidKey(
   source: Record<string, any> | string[],
   sourceName: string,
 ) {
-  if (!isObject(target)) throw new SonariaError("INVALID_TYPE", "object", target, sourceName);
+  if (!isObject(target)) throw new SonariaError("InvalidType", "object", target, sourceName);
   const sourceKeys = Array.isArray(source) ? source : objectKeys(source);
   const invalidKey = objectKeys(target).find(key => !sourceKeys.includes(key));
-  if (invalidKey) throw new SonariaError("INVALID_KEY", sourceName, invalidKey);
+  if (invalidKey) throw new SonariaError("InvalidKey", sourceName, invalidKey);
 }
 
 export function isObject(obj: any): obj is Record<string, any> {

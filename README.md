@@ -60,15 +60,15 @@ const sonaria = new Sonaria(client, {
 });
 
 sonaria
-  .on(Events.PLAY_SONG, (queue, song) =>
+  .on(Events.PlaySong, (queue, song) =>
     queue.textChannel?.messages.write({
       content: `Playing \`${song.name}\` - \`${song.formattedDuration}\``,
     }),
   )
-  .on(Events.ADD_SONG, (queue, song) =>
+  .on(Events.AddSong, (queue, song) =>
     queue.textChannel?.messages.write({ content: `Added \`${song.name}\` to the queue` }),
   )
-  .on(Events.ERROR, (error, queue) =>
+  .on(Events.Error, (error, queue) =>
     queue.textChannel?.messages.write({ content: `An error occurred: ${error.message}` }),
   );
 
@@ -136,18 +136,18 @@ if (queue) {
 
 | Event | Arguments | Description |
 | --- | --- | --- |
-| `Events.ADD_LIST` | `queue`, `playlist` | A playlist was added to the queue. |
-| `Events.ADD_SONG` | `queue`, `song` | A song was added to the queue. |
-| `Events.PLAY_SONG` | `queue`, `song` | A song started playing. |
-| `Events.FINISH_SONG` | `queue`, `song` | A song finished playing. |
-| `Events.FINISH` | `queue` | The queue finished. |
-| `Events.ERROR` | `error`, `queue`, `song?` | An error occurred. |
-| `Events.NO_RELATED` | `queue`, `error` | Autoplay could not find a related song. |
-| `Events.INIT_QUEUE` | `queue` | A queue was created. |
-| `Events.DELETE_QUEUE` | `queue` | A queue was deleted. |
-| `Events.DISCONNECT` | `queue` | The bot disconnected from a voice channel. |
-| `Events.DEBUG` | `message` | Internal debug message. |
-| `Events.FFMPEG_DEBUG` | `message` | FFmpeg process output. |
+| `Events.AddList` | `queue`, `playlist` | A playlist was added to the queue. |
+| `Events.AddSong` | `queue`, `song` | A song was added to the queue. |
+| `Events.PlaySong` | `queue`, `song` | A song started playing. |
+| `Events.FinishSong` | `queue`, `song` | A song finished playing. |
+| `Events.Finish` | `queue` | The queue finished. |
+| `Events.Error` | `error`, `queue`, `song?` | An error occurred. |
+| `Events.NoRelated` | `queue`, `error` | Autoplay could not find a related song. |
+| `Events.InitQueue` | `queue` | A queue was created. |
+| `Events.DeleteQueue` | `queue` | A queue was deleted. |
+| `Events.Disconnect` | `queue` | The bot disconnected from a voice channel. |
+| `Events.Debug` | `message` | Internal debug message. |
+| `Events.FfmpegDebug` | `message` | FFmpeg process output. |
 
 ## Audio filters
 

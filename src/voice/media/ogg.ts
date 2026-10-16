@@ -1,12 +1,12 @@
 import { bytesStartWith, concatenateBytes } from "../bytes";
 import { AsyncByteReader, type VoiceByteInput } from "./input";
-import { assertDiscordOpusHead, MAX_OPUS_PACKET_SIZE } from "./opus";
+import { assertDiscordOpusHead, MaxOpusPacketSize } from "./opus";
 import type { VoicePlaybackSource } from "./playback";
 
-const OGG_CAPTURE_PATTERN = Uint8Array.of(0x4f, 0x67, 0x67, 0x53);
-const OPUS_TAGS = new TextEncoder().encode("OpusTags");
-const OGG_CRC_TABLE = createOggCrcTable();
-const MAX_OGG_HEADER_PACKET_SIZE = 1_048_576;
+const OggCapturePattern = Uint8Array.of(0x4f, 0x67, 0x67, 0x53);
+const OpusTags = new TextEncoder().encode("OpusTags");
+const OggCrcTable = createOggCrcTable();
+const MaxOggHeaderPacketSize = 1_048_576;
 
 export function demuxOggOpus(input: VoiceByteInput): VoicePlaybackSource {
   return {
@@ -34,7 +34,7 @@ async function* readOggOpusPackets(reader: AsyncByteReader): AsyncGenerator<Uint
     const fixedHeader = await reader.readExactlyOrEof(27);
     if (!fixedHeader) break;
     pageCount++;
-    if (!bytesStartWith(fixedHeader, OGG_CAPTURE_PATTERN) || fixedHeader[4] !== 0) {
+    if (!bytesStartWith(fixedHeader, OggCapturePattern) || fixedHeader[4] !== 0) {
       throw new TypeError("The input is not a supported Ogg bitstream.");
     }
     const flags = fixedHeader[5] as number;
@@ -73,7 +73,7 @@ async function* readOggOpusPackets(reader: AsyncByteReader): AsyncGenerator<Uint
     let payloadOffset = 0;
     for (const segmentLength of segmentTable) {
       packetSize += segmentLength;
-      const maximumPacketSize = packetCount < 2 ? MAX_OGG_HEADER_PACKET_SIZE : MAX_OPUS_PACKET_SIZE;
+      const maximumPacketSize = packetCount < 2 ? MaxOggHeaderPacketSize : MaxOpusPacketSize;
       if (packetSize > maximumPacketSize) {
         throw new TypeError("An Ogg Opus packet exceeds the supported size limit.");
       }
@@ -103,7 +103,7 @@ async function* readOggOpusPackets(reader: AsyncByteReader): AsyncGenerator<Uint
 }
 
 function validateOpusTags(packet: Uint8Array): void {
-  if (!bytesStartWith(packet, OPUS_TAGS) || packet.byteLength < 16) {
+  if (!bytesStartWith(packet, OpusTags) || packet.byteLength < 16) {
     throw new TypeError("The Ogg Opus stream is missing its OpusTags packet.");
   }
   const view = new DataView(packet.buffer, packet.byteOffset, packet.byteLength);
@@ -133,6 +133,6 @@ function createOggCrcTable(): Uint32Array {
 function oggCrc(value: Uint8Array): number {
   let checksum = 0;
   for (const byte of value)
-    checksum = ((checksum << 8) ^ (OGG_CRC_TABLE[((checksum >>> 24) ^ byte) & 0xff] as number)) >>> 0;
+    checksum = ((checksum << 8) ^ (OggCrcTable[((checksum >>> 24) ^ byte) & 0xff] as number)) >>> 0;
   return checksum;
 }

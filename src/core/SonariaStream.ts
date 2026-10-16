@@ -1,7 +1,7 @@
 import type { ChildProcess } from "node:child_process";
 import { spawn, spawnSync } from "node:child_process";
 import type { Readable } from "node:stream";
-import { AUDIO_BITRATE, AUDIO_CHANNELS, AUDIO_SAMPLE_RATE } from "../constant";
+import { AudioBitrate, AudioChannels, AudioSampleRate } from "../constant";
 import type { Sonaria } from "../Sonaria";
 import { SonariaError } from "../struct/SonariaError";
 import { TypedEmitter } from "../struct/TypedEmitter";
@@ -38,7 +38,7 @@ let checked = process.env.NODE_ENV === "test";
 export const checkFFmpeg = (sonaria: Sonaria) => {
   if (checked) return;
   const path = sonaria.options.ffmpeg.path;
-  const debug = (str: string) => sonaria.emit(Events.FFMPEG_DEBUG, str);
+  const debug = (str: string) => sonaria.emit(Events.FfmpegDebug, str);
   try {
     debug(`[test] spawn ffmpeg at '${path}' path`);
     const proc = spawnSync(path, ["-h"], {
@@ -55,7 +55,7 @@ export const checkFFmpeg = (sonaria: Sonaria) => {
   } catch (e: unknown) {
     const errorMessage = e instanceof Error ? (e.stack ?? e.message) : String(e);
     debug(`[test] failed to spawn ffmpeg at '${path}': ${errorMessage}`);
-    throw new SonariaError("FFMPEG_NOT_INSTALLED", path);
+    throw new SonariaError("FfmpegNotInstalled", path);
   }
   checked = true;
 };
@@ -135,11 +135,11 @@ export class SonariaStream extends TypedEmitter<{
 
     const opts: FFmpegArg = {
       ...input,
-      ar: AUDIO_SAMPLE_RATE,
-      ac: AUDIO_CHANNELS,
+      ar: AudioSampleRate,
+      ac: AudioChannels,
       ...ffmpeg.args.output,
       "c:a": "libopus",
-      "b:a": AUDIO_BITRATE,
+      "b:a": AudioBitrate,
       f: "ogg",
       ...(audioFilters.length ? { af: audioFilters.join(",") } : {}),
     };
@@ -175,7 +175,7 @@ export class SonariaStream extends TypedEmitter<{
         this.debug(`[process] exit: code=${code ?? "unknown"} signal=${signal ?? "unknown"}`);
         if (!code || [0, 255].includes(code)) return;
         this.debug(`[process] error: ffmpeg exited with code ${code}`);
-        this.emit("error", new SonariaError("FFMPEG_EXITED", code));
+        this.emit("error", new SonariaError("FfmpegExited", code));
       });
 
     if (!this.process.stdout || !this.process.stderr) {

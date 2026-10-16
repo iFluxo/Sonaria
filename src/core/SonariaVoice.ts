@@ -1,5 +1,5 @@
 import type { AllGuildVoiceChannels, GuildMember, VoiceState } from "seyfert";
-import { JOIN_TIMEOUT_MS } from "../constant";
+import { JoinTimeoutMs } from "../constant";
 import { SonariaError } from "../struct/SonariaError";
 import { TypedEmitter } from "../struct/TypedEmitter";
 import type { SonariaVoiceEvents } from "../type";
@@ -71,10 +71,10 @@ export class SonariaVoice extends TypedEmitter<SonariaVoiceEvents> {
 
   set channel(channel: AllGuildVoiceChannels) {
     if (!isSupportedVoiceChannel(channel)) {
-      throw new SonariaError("INVALID_TYPE", "BaseGuildVoiceChannel", channel, "SonariaVoice#channel");
+      throw new SonariaError("InvalidType", "BaseGuildVoiceChannel", channel, "SonariaVoice#channel");
     }
-    if (channel.guildId !== this.id) throw new SonariaError("VOICE_DIFFERENT_GUILD");
-    if (channel.client?.botId !== this.voices.client.botId) throw new SonariaError("VOICE_DIFFERENT_CLIENT");
+    if (channel.guildId !== this.id) throw new SonariaError("VoiceDifferentGuild");
+    if (channel.client?.botId !== this.voices.client.botId) throw new SonariaError("VoiceDifferentClient");
     if (channel.id === this.#channel?.id) return;
     this.#channel = channel;
   }
@@ -124,7 +124,7 @@ export class SonariaVoice extends TypedEmitter<SonariaVoiceEvents> {
     } catch {
       this.#connection = undefined;
       this.voices.remove(this.id);
-      throw new SonariaError("VOICE_CONNECT_FAILED", JOIN_TIMEOUT_MS / 1000);
+      throw new SonariaError("VoiceConnectFailed", JoinTimeoutMs / 1000);
     }
     return this;
   }
@@ -185,11 +185,11 @@ export class SonariaVoice extends TypedEmitter<SonariaVoiceEvents> {
     const connection = this.#connection;
     if (!connection || connection.state.status === "destroyed") {
       dtStream.kill();
-      throw new SonariaError("VOICE_RECONNECT_FAILED");
+      throw new SonariaError("VoiceReconnectFailed");
     }
     if (connection.state.status !== "ready") {
       dtStream.kill();
-      throw new SonariaError("VOICE_CONNECT_FAILED", JOIN_TIMEOUT_MS / 1000);
+      throw new SonariaError("VoiceConnectFailed", JoinTimeoutMs / 1000);
     }
 
     dtStream.spawn();
@@ -259,10 +259,10 @@ export class SonariaVoice extends TypedEmitter<SonariaVoiceEvents> {
 
   set volume(volume: number) {
     if (typeof volume !== "number" || Number.isNaN(volume)) {
-      throw new SonariaError("INVALID_TYPE", "number", volume, "volume");
+      throw new SonariaError("InvalidType", "number", volume, "volume");
     }
     if (volume < 0) {
-      throw new SonariaError("NUMBER_COMPARE", "Volume", "bigger or equal to", 0);
+      throw new SonariaError("NumberCompare", "Volume", "bigger or equal to", 0);
     }
     const changed = this.#volume !== volume;
     this.#volume = volume;
@@ -291,12 +291,12 @@ export class SonariaVoice extends TypedEmitter<SonariaVoiceEvents> {
 
   /**
    * Self-deaf the bot.
-   * @param selfDeaf - Whether or not the bot should be self-deafened
+   * @param selfDeaf - Whether or not the bot should be SelfDeafened
    * @returns `true` if the self state was updated
    */
   async setSelfDeaf(selfDeaf: boolean): Promise<boolean> {
     if (typeof selfDeaf !== "boolean") {
-      throw new SonariaError("INVALID_TYPE", "boolean", selfDeaf, "selfDeaf");
+      throw new SonariaError("InvalidType", "boolean", selfDeaf, "selfDeaf");
     }
     const connection = this.#connection;
     if (connection?.state.status !== "ready") return false;
@@ -306,12 +306,12 @@ export class SonariaVoice extends TypedEmitter<SonariaVoiceEvents> {
 
   /**
    * Self-mute the bot.
-   * @param selfMute - Whether or not the bot should be self-muted
+   * @param selfMute - Whether or not the bot should be SelfMuted
    * @returns `true` if the self state was updated
    */
   async setSelfMute(selfMute: boolean): Promise<boolean> {
     if (typeof selfMute !== "boolean") {
-      throw new SonariaError("INVALID_TYPE", "boolean", selfMute, "selfMute");
+      throw new SonariaError("InvalidType", "boolean", selfMute, "selfMute");
     }
     const connection = this.#connection;
     if (connection?.state.status !== "ready") return false;

@@ -26,7 +26,7 @@ export class FilterManager extends BaseManager<Filter> {
         value: this.sonaria.filters[filter],
       };
     }
-    throw new SonariaError("INVALID_TYPE", "FilterResolvable", filter, "filter");
+    throw new SonariaError("InvalidType", "FilterResolvable", filter, "filter");
   }
 
   #apply() {
@@ -65,7 +65,7 @@ export class FilterManager extends BaseManager<Filter> {
    * @param filters - The filters to apply
    */
   set(filters: FilterResolvable[]) {
-    if (!Array.isArray(filters)) throw new SonariaError("INVALID_TYPE", "Array<FilterResolvable>", filters, "filters");
+    if (!Array.isArray(filters)) throw new SonariaError("InvalidType", "Array<FilterResolvable>", filters, "filters");
     this.collection.clear();
     for (const f of filters) {
       const filter = this.#resolve(f);

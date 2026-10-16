@@ -20,10 +20,10 @@ import {
   WireFormat,
 } from "./protocol";
 
-const EMPTY = new Uint8Array();
-const MAXIMUM_UINT64 = 0xffff_ffff_ffff_ffffn;
-const MLS_DEFAULT_EXTENSION_TYPES = new Set([1, 2, 3, 4, 5]);
-const MLS_DEFAULT_PROPOSAL_TYPES = new Set([1, 2, 3, 4, 5, 6, 7]);
+const Empty = new Uint8Array();
+const MaximumUint64 = 0xffff_ffff_ffff_ffffn;
+const MlsDefaultExtensionTypes = new Set([1, 2, 3, 4, 5]);
+const MlsDefaultProposalTypes = new Set([1, 2, 3, 4, 5, 6, 7]);
 
 export interface DaveLeafMaterial {
   readonly leafNode: MlsLeafNode;
@@ -64,10 +64,10 @@ export function createDaveLeafMaterial(
       },
       source: {
         type: LeafNodeSource.KeyPackage,
-        lifetime: { notBefore: 0n, notAfter: MAXIMUM_UINT64 },
+        lifetime: { notBefore: 0n, notAfter: MaximumUint64 },
       },
       extensions: [],
-      signature: EMPTY,
+      signature: Empty,
     };
     const leafNode: MlsLeafNode = {
       ...unsignedLeafNode,
@@ -144,7 +144,7 @@ function createDaveKeyPackageMaterial(
       initKey: initKeyPair.publicKey,
       leafNode: leafMaterial.leafNode,
       extensions: [],
-      signature: EMPTY,
+      signature: Empty,
     };
     const keyPackage: MlsKeyPackage = {
       ...unsignedKeyPackage,
@@ -187,7 +187,7 @@ export function validateDaveLeafNode(
   if (leafNode.source.type !== LeafNodeSource.KeyPackage) {
     throw new TypeError("DAVE KeyPackage leaf nodes must use the key_package source.");
   }
-  if (leafNode.source.lifetime.notBefore !== 0n || leafNode.source.lifetime.notAfter !== MAXIMUM_UINT64) {
+  if (leafNode.source.lifetime.notBefore !== 0n || leafNode.source.lifetime.notAfter !== MaximumUint64) {
     throw new TypeError("DAVE KeyPackage leaf lifetime must span 0 through 2^64 - 1.");
   }
   if (leafNode.extensions.length !== 0) throw new TypeError("DAVE v1 leaf nodes cannot contain extensions.");
@@ -326,8 +326,8 @@ function assertDaveCapabilities(capabilities: MlsCapabilities): void {
   assertNoReservedCapability(capabilities.extensions, "extensions");
   assertNoReservedCapability(capabilities.proposals, "proposals");
   assertNoReservedCapability(capabilities.credentials, "credentials");
-  assertNoDefaultCapabilities(capabilities.extensions, MLS_DEFAULT_EXTENSION_TYPES, "extensions");
-  assertNoDefaultCapabilities(capabilities.proposals, MLS_DEFAULT_PROPOSAL_TYPES, "proposals");
+  assertNoDefaultCapabilities(capabilities.extensions, MlsDefaultExtensionTypes, "extensions");
+  assertNoDefaultCapabilities(capabilities.proposals, MlsDefaultProposalTypes, "proposals");
 }
 
 function assertCapability(values: readonly number[], expected: number, name: string): void {
@@ -347,7 +347,7 @@ function assertNoDefaultCapabilities(values: readonly number[], defaults: Readon
 
 function assertKeyPackageExtensionCapabilities(keyPackage: MlsKeyPackage): void {
   for (const extension of keyPackage.extensions) {
-    if (MLS_DEFAULT_EXTENSION_TYPES.has(extension.type)) {
+    if (MlsDefaultExtensionTypes.has(extension.type)) {
       throw new TypeError(`MLS extension ${extension.type} is not valid in a KeyPackage.`);
     }
     if (keyPackage.leafNode.capabilities.extensions.includes(extension.type)) continue;

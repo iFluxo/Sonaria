@@ -52,7 +52,7 @@ export class VoiceConnection {
     return this.#actions.play(this, source);
   }
 
-  /** Subscribes to complete encoded Opus packets from one participant. The bot must not be self-deafened. */
+  /** Subscribes to complete encoded Opus packets from one participant. The bot must not be SelfDeafened. */
   receive(userId: string, options: VoiceReceiveOptions = {}): VoiceReceiveStream {
     this.assertAlive();
     assertSnowflake(userId, "userId");
@@ -72,7 +72,7 @@ export class VoiceConnection {
 
   private assertAlive(): void {
     if (this.#state.status !== "destroyed") return;
-    throw new VoiceError("VOICE_CONNECTION_DESTROYED", {
+    throw new VoiceError("VoiceConnectionDestroyed", {
       metadata: { guildId: this.guildId, status: this.#state.status },
     });
   }
@@ -94,7 +94,7 @@ export class VoiceConnection {
       },
       setVoicePrivacyCode(code) {
         if (code !== null && !/^\d{30}$/.test(code)) {
-          throw new VoiceError("VOICE_PROTOCOL_ERROR", {
+          throw new VoiceError("VoiceProtocolError", {
             metadata: { detail: "DAVE voice privacy codes must contain exactly 30 ASCII digits." },
           });
         }

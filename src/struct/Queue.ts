@@ -1,5 +1,5 @@
 import type { AllGuildTextableChannels, AllGuildVoiceChannels, GuildMember } from "seyfert";
-import { DEFAULT_VOLUME } from "../constant";
+import { DefaultVolume } from "../constant";
 import { FilterManager } from "../core/manager/FilterManager";
 import { SonariaBase } from "../core/SonariaBase";
 import type { SonariaVoice } from "../core/SonariaVoice";
@@ -96,14 +96,14 @@ export class Queue extends SonariaBase {
     super(sonaria);
     this.voice = voice;
     this.id = voice.id;
-    this.volume = DEFAULT_VOLUME;
+    this.volume = DefaultVolume;
     this.songs = [];
     this.previousSongs = [];
     this.stopped = false;
     this._manualUpdate = false;
     this.playing = false;
     this.paused = false;
-    this.repeatMode = RepeatMode.DISABLED;
+    this.repeatMode = RepeatMode.Disabled;
     this.autoplay = false;
     this.#filters = new FilterManager(this);
     this._beginTime = 0;
@@ -207,9 +207,9 @@ export class Queue extends SonariaBase {
    * @returns The guild queue
    */
   addToQueue(song: Song | Song[], position = 0): Queue {
-    if (this.stopped) throw new SonariaError("QUEUE_STOPPED");
+    if (this.stopped) throw new SonariaError("QueueStopped");
     if (!song || (Array.isArray(song) && !song.length)) {
-      throw new SonariaError("INVALID_TYPE", ["Song", "Array<Song>"], song, "song");
+      throw new SonariaError("InvalidType", ["Song", "Array<Song>"], song, "song");
     }
     if (position > 0) {
       if (Array.isArray(song)) this.songs.splice(position, 0, ...song);
@@ -245,7 +245,7 @@ export class Queue extends SonariaBase {
   async pause(): Promise<Queue> {
     await this._taskQueue.queuing();
     try {
-      if (this.paused) throw new SonariaError("PAUSED");
+      if (this.paused) throw new SonariaError("Paused");
       this.paused = true;
       this.voice.pause();
       return this;
@@ -261,7 +261,7 @@ export class Queue extends SonariaBase {
   async resume(): Promise<Queue> {
     await this._taskQueue.queuing();
     try {
-      if (!this.paused) throw new SonariaError("RESUMED");
+      if (!this.paused) throw new SonariaError("Resumed");
       this.paused = false;
       this.voice.unpause();
       return this;
@@ -298,12 +298,12 @@ export class Queue extends SonariaBase {
   async previous(): Promise<Song> {
     await this._taskQueue.queuing();
     try {
-      if (!this.options.savePreviousSongs) throw new SonariaError("DISABLED_OPTION", "savePreviousSongs");
-      if (this.previousSongs.length === 0 && this.repeatMode !== RepeatMode.QUEUE) {
-        throw new SonariaError("NO_PREVIOUS");
+      if (!this.options.savePreviousSongs) throw new SonariaError("DisabledOption", "savePreviousSongs");
+      if (this.previousSongs.length === 0 && this.repeatMode !== RepeatMode.Queue) {
+        throw new SonariaError("NoPrevious");
       }
       const song =
-        this.repeatMode === RepeatMode.QUEUE && this.previousSongs.length === 0
+        this.repeatMode === RepeatMode.Queue && this.previousSongs.length === 0
           ? (this.songs[this.songs.length - 1] as Song)
           : (this.previousSongs.pop() as Song);
       this.songs.unshift(song);
@@ -344,16 +344,16 @@ export class Queue extends SonariaBase {
   async jump(position: number, options?: JumpOptions): Promise<Song> {
     await this._taskQueue.queuing();
     try {
-      if (typeof position !== "number") throw new SonariaError("INVALID_TYPE", "number", position, "position");
+      if (typeof position !== "number") throw new SonariaError("InvalidType", "number", position, "position");
       if (!position || position > this.songs.length || -position > this.previousSongs.length) {
-        throw new SonariaError("NO_SONG_POSITION");
+        throw new SonariaError("NoSongPosition");
       }
       if (position > 0) {
         if (position >= this.songs.length) {
           if (this.autoplay) {
             await this._addRelatedSong();
           } else {
-            throw new SonariaError("NO_UP_NEXT");
+            throw new SonariaError("NoUpNext");
           }
         }
         const skipped = this.songs.splice(0, position);
@@ -363,7 +363,7 @@ export class Queue extends SonariaBase {
           this.#addToPreviousSongs(skipped);
         }
       } else if (!this.options.savePreviousSongs) {
-        throw new SonariaError("DISABLED_OPTION", "savePreviousSongs");
+        throw new SonariaError("DisabledOption", "savePreviousSongs");
       } else {
         const skipped = this.previousSongs.splice(position);
         this.songs.unshift(...skipped);
@@ -383,10 +383,10 @@ export class Queue extends SonariaBase {
    */
   setRepeatMode(mode?: RepeatMode): RepeatMode {
     if (mode !== undefined && !Object.values(RepeatMode).includes(mode)) {
-      throw new SonariaError("INVALID_TYPE", ["RepeatMode", "undefined"], mode, "mode");
+      throw new SonariaError("InvalidType", ["RepeatMode", "undefined"], mode, "mode");
     }
     if (mode === undefined) this.repeatMode = (this.repeatMode + 1) % 3;
-    else if (this.repeatMode === mode) this.repeatMode = RepeatMode.DISABLED;
+    else if (this.repeatMode === mode) this.repeatMode = RepeatMode.Disabled;
     else this.repeatMode = mode;
     return this.repeatMode;
   }
@@ -399,9 +399,9 @@ export class Queue extends SonariaBase {
   async seek(time: number): Promise<Queue> {
     await this._taskQueue.queuing();
     try {
-      if (typeof time !== "number") throw new SonariaError("INVALID_TYPE", "number", time, "time");
+      if (typeof time !== "number") throw new SonariaError("InvalidType", "number", time, "time");
       if (Number.isNaN(time) || time < 0) {
-        throw new SonariaError("NUMBER_COMPARE", "time", "bigger or equal to", 0);
+        throw new SonariaError("NumberCompare", "time", "bigger or equal to", 0);
       }
       this._beginTime = time;
       await this.play(false);
@@ -418,7 +418,7 @@ export class Queue extends SonariaBase {
    */
   async _addRelatedSong(song?: Song): Promise<Song> {
     const current = song ?? this.songs[0];
-    if (!current) throw new SonariaError("NO_PLAYING_SONG");
+    if (!current) throw new SonariaError("NoPlayingSong");
     const nextSong = await this.#getRelatedSong(current);
     nextSong.metadata = current.metadata;
     nextSong.member = this.clientMember;
@@ -448,7 +448,7 @@ export class Queue extends SonariaBase {
         if (relatedAltSong) return relatedAltSong;
       }
     }
-    throw new SonariaError("NO_RELATED");
+    throw new SonariaError("NoRelated");
   }
 
   /**
@@ -489,7 +489,7 @@ export class Queue extends SonariaBase {
     this.previousSongs = [];
     if (this._listeners) for (const event of objectKeys(this._listeners)) this.voice.off(event, this._listeners[event]);
     this.queues.remove(this.id);
-    this.emit(Events.DELETE_QUEUE, this);
+    this.emit(Events.DeleteQueue, this);
   }
 
   /**
@@ -503,10 +503,10 @@ export class Queue extends SonariaBase {
 
   /**
    * Play the first song in the queue
-   * @param emitPlaySong - Whether or not emit {@link Events.PLAY_SONG} event
+   * @param emitPlaySong - Whether or not emit {@link Events.PlaySong} event
    */
   play(emitPlaySong = true) {
-    if (this.stopped) throw new SonariaError("QUEUE_STOPPED");
+    if (this.stopped) throw new SonariaError("QueueStopped");
     this.playing = true;
     return this.queues.playSong(this, emitPlaySong);
   }

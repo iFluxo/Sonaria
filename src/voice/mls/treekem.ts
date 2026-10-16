@@ -34,8 +34,8 @@ import {
   validateParentHashes,
 } from "./tree";
 
-const EMPTY = new Uint8Array();
-const ZERO_COMMIT_SECRET = new Uint8Array(32);
+const Empty = new Uint8Array();
+const ZeroCommitSecret = new Uint8Array(32);
 
 export interface MlsProvisionalGroupContextInput {
   readonly version: typeof ProtocolVersion.Mls10;
@@ -182,7 +182,7 @@ export function createUpdatePath(provider: VoiceCryptoProvider, input: CreateMls
         "path",
       );
     } else {
-      commitSecret = ZERO_COMMIT_SECRET.slice();
+      commitSecret = ZeroCommitSecret.slice();
     }
 
     assertFreshUpdatePathKeys(provider, input.tree, leafKeyPair.publicKey, currentLeaf.signatureKey, pathPublicKeys);
@@ -454,7 +454,7 @@ function applyPathPublicKeys(
       type: NodeType.Parent,
       parentNode: Object.freeze({
         encryptionKey: (pathPublicKeys[position] as Uint8Array).slice(),
-        parentHash: EMPTY,
+        parentHash: Empty,
         unmergedLeaves: Object.freeze([]),
       }),
     });
@@ -464,7 +464,7 @@ function applyPathPublicKeys(
     const currentNode = requireParentNode(nodes, pathNodeIndex);
     const parentHash =
       position + 1 === layout.pathNodeIndices.length
-        ? EMPTY
+        ? Empty
         : computeParentHash(
             provider,
             compactTree(nodes),
@@ -478,7 +478,7 @@ function applyPathPublicKeys(
   }
   const leafParentHash =
     layout.pathNodeIndices.length === 0
-      ? EMPTY
+      ? Empty
       : computeParentHash(
           provider,
           compactTree(nodes),
@@ -515,7 +515,7 @@ function createCommitLeafNode(
     ...currentLeaf,
     encryptionKey: encryptionKey.slice(),
     source: { type: LeafNodeSource.Commit, parentHash: parentHash.slice() },
-    signature: EMPTY,
+    signature: Empty,
   };
   return Object.freeze({
     ...unsignedLeaf,

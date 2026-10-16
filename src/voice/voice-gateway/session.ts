@@ -37,9 +37,9 @@ import {
   type VoiceTransportEncryptionMode,
 } from "./protocol";
 
-const IP_DISCOVERY_TIMEOUT_MS = 5_000;
-const RETRY_BASE_DELAY_MS = 500;
-const RETRY_MAX_DELAY_MS = 30_000;
+const IpDiscoveryTimeoutMs = 5_000;
+const RetryBaseDelayMs = 500;
+const RetryMaxDelayMs = 30_000;
 
 interface PendingDiscovery {
   readonly ssrc: number;
@@ -133,10 +133,10 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
       this.#dave.maxProtocolVersion < 0 ||
       this.#dave.maxProtocolVersion > 1
     ) {
-      throw new VoiceError("VOICE_PROTOCOL_ERROR", {
+      throw new VoiceError("VoiceProtocolError", {
         metadata: {
           detail: "The DAVE Engine maximum protocol version must be 0 or 1.",
-          reason: "invalid-dave-capability",
+          reason: "InvalidDaveCapability",
         },
       });
     }
@@ -157,10 +157,10 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
       !this.#udpSocket ||
       !this.#packetizer
     ) {
-      throw playbackError(this.#input.guildId, "transport-not-ready");
+      throw playbackError(this.#input.guildId, "TransportNotReady");
     }
     if (this.#transmission) {
-      throw new VoiceError("VOICE_OPERATION_CONFLICT", {
+      throw new VoiceError("VoiceOperationConflict", {
         metadata: { guildId: this.#input.guildId, operation: "play", activeOperation: "play" },
       });
     }
@@ -189,8 +189,8 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
     if (!this.#readySettled) {
       this.#readySettled = true;
       this.#readyDeferred.reject(
-        new VoiceError("VOICE_CONNECTION_DESTROYED", {
-          metadata: { guildId: this.#input.guildId, reason: "transport-closed" },
+        new VoiceError("VoiceConnectionDestroyed", {
+          metadata: { guildId: this.#input.guildId, reason: "TransportClosed" },
         }),
       );
     }
@@ -265,8 +265,8 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
   private requireOpenWebSocket(): WebSocket {
     const socket = this.#webSocket;
     if (socket?.readyState !== 1) {
-      throw new VoiceError("VOICE_CONNECTION_FAILED", {
-        metadata: { guildId: this.#input.guildId, reason: "voice-websocket-unavailable" },
+      throw new VoiceError("VoiceConnectionFailed", {
+        metadata: { guildId: this.#input.guildId, reason: "VoiceWebsocketUnavailable" },
       });
     }
     return socket;
@@ -286,7 +286,7 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
     this.#lastSequence = message.sequence ?? this.#lastSequence;
     if (message.kind === "binary") {
       if (!isDaveBinaryOpcode(message.opcode)) {
-        throw new VoiceError("VOICE_PROTOCOL_ERROR", {
+        throw new VoiceError("VoiceProtocolError", {
           metadata: {
             detail: "The Voice Gateway sent an unknown binary opcode.",
             opcode: message.opcode,
@@ -333,7 +333,7 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
 
   private startHeartbeat(intervalMs: number, socket: WebSocket, generation: number): void {
     if (intervalMs > 2_147_483_647) {
-      throw new VoiceError("VOICE_PROTOCOL_ERROR", {
+      throw new VoiceError("VoiceProtocolError", {
         metadata: { detail: "The Voice Gateway heartbeat interval exceeds the runtime timer limit." },
       });
     }
@@ -344,8 +344,8 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
         this.handleTransientWebSocketFailure(
           socket,
           generation,
-          new VoiceError("VOICE_CONNECTION_FAILED", {
-            metadata: { guildId: this.#input.guildId, reason: "heartbeat-ack-timeout" },
+          new VoiceError("VoiceConnectionFailed", {
+            metadata: { guildId: this.#input.guildId, reason: "HeartbeatAckTimeout" },
           }),
         );
         return;
@@ -382,7 +382,7 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
     try {
       discovery = await this.openUdpAndDiscover(data);
     } catch (error) {
-      if (VoiceError.is(error, "VOICE_PROTOCOL_ERROR")) throw error;
+      if (VoiceError.is(error, "VoiceProtocolError")) throw error;
       this.handleTransientWebSocketFailure(socket, webSocketGeneration, error);
       return;
     }
@@ -400,8 +400,8 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
     const previous = this.#udpSocket;
     this.#udpSocket = undefined;
     this.rejectPendingDiscovery(
-      new VoiceError("VOICE_CONNECTION_FAILED", {
-        metadata: { guildId: this.#input.guildId, reason: "ip-discovery-replaced" },
+      new VoiceError("VoiceConnectionFailed", {
+        metadata: { guildId: this.#input.guildId, reason: "IpDiscoveryReplaced" },
       }),
     );
     await previous?.close();
@@ -423,11 +423,11 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
     const deferred = Promise.withResolvers<VoiceIpDiscoveryResult>();
     const timer = setTimeout(() => {
       deferred.reject(
-        new VoiceError("VOICE_CONNECTION_FAILED", {
-          metadata: { guildId: this.#input.guildId, reason: "ip-discovery-timeout" },
+        new VoiceError("VoiceConnectionFailed", {
+          metadata: { guildId: this.#input.guildId, reason: "IpDiscoveryTimeout" },
         }),
       );
-    }, IP_DISCOVERY_TIMEOUT_MS);
+    }, IpDiscoveryTimeoutMs);
     unrefTimer(timer);
     this.#pendingDiscovery = { ssrc: data.ssrc, generation, deferred, timer };
     try {
@@ -499,7 +499,7 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
 
   private handleUdpFailure(generation: number, error: unknown): void {
     if (!this.isCurrentUdpGeneration(generation)) return;
-    const connectionError = toConnectionError(error, this.#input.guildId, "udp-error");
+    const connectionError = toConnectionError(error, this.#input.guildId, "UdpError");
     if (this.#pendingDiscovery?.generation === generation) {
       this.#pendingDiscovery.deferred.reject(connectionError);
       return;
@@ -512,8 +512,8 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
     if (!this.isCurrentUdpGeneration(generation) || this.#closed) return;
     this.handleUdpFailure(
       generation,
-      new VoiceError("VOICE_CONNECTION_FAILED", {
-        metadata: { guildId: this.#input.guildId, reason: "udp-closed" },
+      new VoiceError("VoiceConnectionFailed", {
+        metadata: { guildId: this.#input.guildId, reason: "UdpClosed" },
       }),
     );
   }
@@ -521,7 +521,7 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
   private async handleSessionDescription(data: unknown): Promise<void> {
     const selectedMode = this.#selectedMode;
     if (!selectedMode) {
-      throw new VoiceError("VOICE_PROTOCOL_ERROR", {
+      throw new VoiceError("VoiceProtocolError", {
         metadata: { detail: "The Voice Gateway sent a Session Description before protocol selection." },
       });
     }
@@ -580,13 +580,13 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
       case "resume":
         this.scheduleWebSocketRetry(this.#hasBeenReady, { code });
         break;
-      case "fresh-server":
+      case "FreshServer":
         this.waitForFreshServer();
         break;
       case "terminal":
         this.failTerminal(
-          new VoiceError("VOICE_CONNECTION_FAILED", {
-            metadata: { guildId: this.#input.guildId, reason: "voice-gateway-close", closeCode: code },
+          new VoiceError("VoiceConnectionFailed", {
+            metadata: { guildId: this.#input.guildId, reason: "VoiceGatewayClose", closeCode: code },
           }),
         );
         break;
@@ -635,7 +635,7 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
     try {
       this.#callbacks.onNeedsServer();
     } catch (error) {
-      this.failTerminal(toConnectionError(error, this.#input.guildId, "fresh-server-request-failed"));
+      this.failTerminal(toConnectionError(error, this.#input.guildId, "FreshServerRequestFailed"));
       return;
     }
     const delay = this.nextRetryDelay();
@@ -649,12 +649,12 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
   private enterRecovery(): void {
     if (!this.#hasBeenReady || this.#recovering || this.#closed) return;
     this.#recovering = true;
-    this.abortTransmission(playbackError(this.#input.guildId, "transport-recovering"));
+    this.abortTransmission(playbackError(this.#input.guildId, "TransportRecovering"));
     this.#callbacks.onRecovering();
   }
 
   private nextRetryDelay(): number {
-    const ceiling = Math.min(RETRY_MAX_DELAY_MS, RETRY_BASE_DELAY_MS * 2 ** Math.min(this.#retryAttempt++, 6));
+    const ceiling = Math.min(RetryMaxDelayMs, RetryBaseDelayMs * 2 ** Math.min(this.#retryAttempt++, 6));
     return Math.floor(ceiling * (0.5 + this.#runtime.random() * 0.5));
   }
 
@@ -687,7 +687,7 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
 
   private closeUdpDetached(): void {
     void this.closeUdp().catch(error => {
-      this.failTerminal(toConnectionError(error, this.#input.guildId, "udp-close-failed"));
+      this.failTerminal(toConnectionError(error, this.#input.guildId, "UdpCloseFailed"));
     });
   }
 
@@ -727,7 +727,7 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
       return true;
     }
     if (ssrc === undefined || !mode) {
-      throw new VoiceError("VOICE_PROTOCOL_ERROR", {
+      throw new VoiceError("VoiceProtocolError", {
         metadata: { detail: "Voice transport encryption was selected without an RTP SSRC or mode." },
       });
     }
@@ -746,7 +746,7 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
 
   private setSpeaking(speaking: boolean): void {
     const ssrc = this.#ssrc;
-    if (ssrc === undefined) throw playbackError(this.#input.guildId, "rtp-ssrc-unavailable");
+    if (ssrc === undefined) throw playbackError(this.#input.guildId, "RtpSsrcUnavailable");
     this.sendJson(VoiceGatewayOpcode.Speaking, { speaking: speaking ? 1 : 0, delay: 0, ssrc });
   }
 
@@ -754,14 +754,14 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
     const socket = this.#udpSocket;
     const packetizer = this.#packetizer;
     if (this.#closed || this.#recovering || !this.#networkReady || !this.#dave.ready || !socket || !packetizer) {
-      throw playbackError(this.#input.guildId, "transport-not-ready");
+      throw playbackError(this.#input.guildId, "TransportNotReady");
     }
     // DAVE protects the Opus frame end to end before transport encryption wraps it for Discord's SFU.
     const transformed = this.#dave.transformAudioFrame(frame);
     try {
       await socket.send(packetizer.createPacket(transformed, samples));
     } catch (error) {
-      throw toConnectionError(error, this.#input.guildId, "audio-send-failed");
+      throw toConnectionError(error, this.#input.guildId, "AudioSendFailed");
     } finally {
       transformed.fill(0);
     }
@@ -824,8 +824,8 @@ export class VoiceGatewayTransport implements VoiceTransportSession {
   }
 }
 
-function playbackError(guildId: string, reason: string): VoiceError<"VOICE_CONNECTION_FAILED"> {
-  return new VoiceError("VOICE_CONNECTION_FAILED", { metadata: { guildId, reason } });
+function playbackError(guildId: string, reason: string): VoiceError<"VoiceConnectionFailed"> {
+  return new VoiceError("VoiceConnectionFailed", { metadata: { guildId, reason } });
 }
 
 function isDaveBinaryOpcode(opcode: number): boolean {
@@ -837,18 +837,18 @@ function isDaveBinaryOpcode(opcode: number): boolean {
   );
 }
 
-function transportClosedError(guildId: string): VoiceError<"VOICE_CONNECTION_DESTROYED"> {
-  return new VoiceError("VOICE_CONNECTION_DESTROYED", {
-    metadata: { guildId, reason: "transport-closed" },
+function transportClosedError(guildId: string): VoiceError<"VoiceConnectionDestroyed"> {
+  return new VoiceError("VoiceConnectionDestroyed", {
+    metadata: { guildId, reason: "TransportClosed" },
   });
 }
 
 function toConnectionError(error: unknown, guildId: string, reason: string): VoiceError {
   if (VoiceError.is(error)) return error;
-  return new VoiceError("VOICE_CONNECTION_FAILED", { cause: error, metadata: { guildId, reason } });
+  return new VoiceError("VoiceConnectionFailed", { cause: error, metadata: { guildId, reason } });
 }
 
 function toProtocolError(error: unknown): VoiceError {
   if (VoiceError.is(error)) return error;
-  return new VoiceError("VOICE_PROTOCOL_ERROR", { cause: error });
+  return new VoiceError("VoiceProtocolError", { cause: error });
 }

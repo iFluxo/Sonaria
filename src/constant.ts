@@ -12,27 +12,27 @@ export const version = "0.1.1";
 /**
  * Audio configuration constants.
  */
-export const AUDIO_SAMPLE_RATE = 48_000;
-export const AUDIO_CHANNELS = 2;
-export const AUDIO_BITRATE = "128k";
+export const AudioSampleRate = 48_000;
+export const AudioChannels = 2;
+export const AudioBitrate = "128k";
 
 /**
  * Default volume percentage (0-100).
  */
-export const DEFAULT_VOLUME = 50;
+export const DefaultVolume = 50;
 
 /**
  * Timeout constants (in milliseconds).
  */
-export const JOIN_TIMEOUT_MS = 30_000;
-export const RECONNECT_TIMEOUT_MS = 5_000;
-export const RECONNECT_MAX_ATTEMPTS = 5;
+export const JoinTimeoutMs = 30_000;
+export const ReconnectTimeoutMs = 5_000;
+export const ReconnectMaxAttempts = 5;
 
 /**
  * HTTP redirect status codes.
  */
-export const HTTP_REDIRECT_CODES = new Set([301, 302, 303, 307, 308]);
-export const MAX_REDIRECT_DEPTH = 5;
+export const HttpRedirectCodes = new Set([301, 302, 303, 307, 308]);
+export const MaxRedirectDepth = 5;
 
 /**
  * Default Sonaria audio filters.

@@ -3,9 +3,9 @@ import { type HpkeCiphertext, hpkeDeriveP256KeyPair, hpkeOpenBase, hpkeSealBase 
 import type { P256KeyPair, VoiceCryptoProvider } from "../crypto/provider";
 import { MlsWriter } from "./codec";
 
-const EMPTY = new Uint8Array();
-const MLS_LABEL = "MLS 1.0 ";
-const TEXT_ENCODER = new TextEncoder();
+const Empty = new Uint8Array();
+const MlsLabel = "MLS 1.0 ";
+const TextEncoderInstance = new TextEncoder();
 
 export function expandWithLabel(
   provider: VoiceCryptoProvider,
@@ -16,14 +16,14 @@ export function expandWithLabel(
 ): Uint8Array {
   const info = new MlsWriter()
     .uint16(length)
-    .vector(concatenateBytes(TEXT_ENCODER.encode(MLS_LABEL), encodeLabel(label)))
+    .vector(concatenateBytes(TextEncoderInstance.encode(MlsLabel), encodeLabel(label)))
     .vector(context)
     .finish();
   return provider.hkdfExpand(secret, info, length);
 }
 
 export function deriveSecret(provider: VoiceCryptoProvider, secret: Uint8Array, label: string): Uint8Array {
-  return expandWithLabel(provider, secret, label, EMPTY, 32);
+  return expandWithLabel(provider, secret, label, Empty, 32);
 }
 
 export function deriveTreeSecret(
@@ -42,7 +42,7 @@ export function refHash(
   label: "MLS 1.0 KeyPackage Reference" | "MLS 1.0 Proposal Reference" | string,
   value: Uint8Array,
 ): Uint8Array {
-  return provider.sha256(new MlsWriter().vector(TEXT_ENCODER.encode(label)).vector(value).finish());
+  return provider.sha256(new MlsWriter().vector(TextEncoderInstance.encode(label)).vector(value).finish());
 }
 
 export function signWithLabel(
@@ -72,7 +72,7 @@ export function encryptWithLabel(
   plaintext: Uint8Array,
   ephemeralSecretKey?: Uint8Array,
 ): HpkeCiphertext {
-  return hpkeSealBase(provider, publicKey, createEncryptContext(label, context), EMPTY, plaintext, ephemeralSecretKey);
+  return hpkeSealBase(provider, publicKey, createEncryptContext(label, context), Empty, plaintext, ephemeralSecretKey);
 }
 
 export function decryptWithLabel(
@@ -83,7 +83,7 @@ export function decryptWithLabel(
   kemOutput: Uint8Array,
   ciphertext: Uint8Array,
 ): Uint8Array {
-  return hpkeOpenBase(provider, secretKey, kemOutput, createEncryptContext(label, context), EMPTY, ciphertext);
+  return hpkeOpenBase(provider, secretKey, kemOutput, createEncryptContext(label, context), Empty, ciphertext);
 }
 
 export function deriveP256KeyPair(provider: VoiceCryptoProvider, secret: Uint8Array): P256KeyPair {
@@ -110,18 +110,18 @@ export function verifyMac(
 
 function createSignContent(label: string, content: Uint8Array): Uint8Array {
   return new MlsWriter()
-    .vector(TEXT_ENCODER.encode(`${MLS_LABEL}${label}`))
+    .vector(TextEncoderInstance.encode(`${MlsLabel}${label}`))
     .vector(content)
     .finish();
 }
 
 function createEncryptContext(label: string, context: Uint8Array): Uint8Array {
   return new MlsWriter()
-    .vector(TEXT_ENCODER.encode(`${MLS_LABEL}${label}`))
+    .vector(TextEncoderInstance.encode(`${MlsLabel}${label}`))
     .vector(context)
     .finish();
 }
 
 function encodeLabel(label: string | Uint8Array): Uint8Array {
-  return typeof label === "string" ? TEXT_ENCODER.encode(label) : label;
+  return typeof label === "string" ? TextEncoderInstance.encode(label) : label;
 }

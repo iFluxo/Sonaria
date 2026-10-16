@@ -41,7 +41,7 @@ export class Playlist<T = unknown> implements PlaylistInfo {
    * @param options - Optional data
    */
   constructor(info: PlaylistInfo, { member, metadata }: ResolveOptions<T> = {}) {
-    if (!Array.isArray(info.songs) || !info.songs.length) throw new SonariaError("EMPTY_PLAYLIST");
+    if (!Array.isArray(info.songs) || !info.songs.length) throw new SonariaError("EmptyPlaylist");
     this.source = info.source.toLowerCase();
     this.songs = info.songs;
     this.id = info.id;

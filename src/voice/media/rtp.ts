@@ -2,9 +2,9 @@ import { concatenateBytes } from "../bytes";
 import type { VoiceCryptoProvider } from "../crypto/provider";
 import type { VoiceTransportEncryptionMode } from "../voice-gateway/protocol";
 
-const RTP_HEADER_SIZE = 12;
-const RTP_OPUS_PAYLOAD_TYPE = 0x78;
-const TRANSPORT_NONCE_SUFFIX_SIZE = 4;
+const RtpHeaderSize = 12;
+const RtpOpusPayloadType = 0x78;
+const TransportNonceSuffixSize = 4;
 
 /** @internal */
 export class VoiceRtpPacketizer {
@@ -55,7 +55,7 @@ export class VoiceRtpPacketizer {
       this.#mode === "aead_aes256_gcm_rtpsize"
         ? this.#provider.aesGcmSeal(this.#secretKey, this.#nonce, header, frame)
         : this.#provider.xchacha20Poly1305Seal(this.#secretKey, this.#nonce, header, frame);
-    const nonceSuffix = this.#nonce.slice(0, TRANSPORT_NONCE_SUFFIX_SIZE);
+    const nonceSuffix = this.#nonce.slice(0, TransportNonceSuffixSize);
     this.#sequence = (this.#sequence + 1) & 0xffff;
     this.#timestamp = (this.#timestamp + samples) >>> 0;
     return concatenateBytes(header, encrypted, nonceSuffix);
@@ -114,26 +114,26 @@ export class VoiceRtpDepacketizer {
 
   openPacket(packet: Uint8Array): VoiceRtpPacket {
     this.assertOpen();
-    if (packet.byteLength < RTP_HEADER_SIZE + 16 + TRANSPORT_NONCE_SUFFIX_SIZE) {
+    if (packet.byteLength < RtpHeaderSize + 16 + TransportNonceSuffixSize) {
       throw new RangeError("An encrypted voice RTP packet is truncated.");
     }
     const view = new DataView(packet.buffer, packet.byteOffset, packet.byteLength);
     const first = packet[0] as number;
     if (first >>> 6 !== 2) throw new TypeError("A voice RTP packet must use RTP version two.");
     const payloadType = (packet[1] as number) & 0x7f;
-    if (payloadType !== RTP_OPUS_PAYLOAD_TYPE) throw new TypeError("A voice RTP packet must contain Opus audio.");
+    if (payloadType !== RtpOpusPayloadType) throw new TypeError("A voice RTP packet must contain Opus audio.");
     const csrcCount = first & 0x0f;
     const hasExtension = (first & 0x10) !== 0;
     const hasPadding = (first & 0x20) !== 0;
-    const extensionPreambleOffset = RTP_HEADER_SIZE + csrcCount * 4;
+    const extensionPreambleOffset = RtpHeaderSize + csrcCount * 4;
     // Discord's rtpsize modes authenticate the RTP header and extension preamble; extension data stays encrypted.
     const headerSize = extensionPreambleOffset + (hasExtension ? 4 : 0);
-    if (packet.byteLength < headerSize + 16 + TRANSPORT_NONCE_SUFFIX_SIZE) {
+    if (packet.byteLength < headerSize + 16 + TransportNonceSuffixSize) {
       throw new RangeError("An encrypted voice RTP header is truncated.");
     }
 
     const extensionSize = hasExtension ? view.getUint16(extensionPreambleOffset + 2) * 4 : 0;
-    const nonceOffset = packet.byteLength - TRANSPORT_NONCE_SUFFIX_SIZE;
+    const nonceOffset = packet.byteLength - TransportNonceSuffixSize;
     this.#nonce.fill(0);
     this.#nonce.set(packet.subarray(nonceOffset), 0);
     const authenticatedHeader = packet.subarray(0, headerSize);
@@ -182,10 +182,10 @@ export class VoiceRtpDepacketizer {
 }
 
 function createRtpHeader(sequence: number, timestamp: number, ssrc: number): Uint8Array {
-  const header = new Uint8Array(RTP_HEADER_SIZE);
+  const header = new Uint8Array(RtpHeaderSize);
   const view = new DataView(header.buffer);
   header[0] = 0x80;
-  header[1] = RTP_OPUS_PAYLOAD_TYPE;
+  header[1] = RtpOpusPayloadType;
   view.setUint16(2, sequence);
   view.setUint32(4, timestamp);
   view.setUint32(8, ssrc);

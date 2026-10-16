@@ -1,7 +1,7 @@
 import type { VoiceCryptoProvider } from "../crypto/provider";
 import { deriveSecret, expandWithLabel } from "./crypto";
 
-const ZERO_SECRET = new Uint8Array(32);
+const ZeroSecret = new Uint8Array(32);
 
 export interface MlsEpochSecrets {
   readonly joinerSecret: Uint8Array;
@@ -21,7 +21,7 @@ export function deriveEpochSecretsFromJoiner(
   provider: VoiceCryptoProvider,
   joinerSecret: Uint8Array,
   encodedGroupContext: Uint8Array,
-  pskSecret: Uint8Array = ZERO_SECRET,
+  pskSecret: Uint8Array = ZeroSecret,
 ): Omit<MlsEpochSecrets, "joinerSecret"> {
   assertSecret(joinerSecret, "joinerSecret");
   assertSecret(pskSecret, "pskSecret");
@@ -42,7 +42,7 @@ export function deriveEpochSecretsFromJoiner(
 export function deriveWelcomeSecret(
   provider: VoiceCryptoProvider,
   joinerSecret: Uint8Array,
-  pskSecret: Uint8Array = ZERO_SECRET,
+  pskSecret: Uint8Array = ZeroSecret,
 ): Uint8Array {
   assertSecret(joinerSecret, "joinerSecret");
   assertSecret(pskSecret, "pskSecret");
@@ -57,7 +57,7 @@ export function deriveWelcomeSecret(
 export function deriveWelcomeKeyNonce(
   provider: VoiceCryptoProvider,
   joinerSecret: Uint8Array,
-  pskSecret: Uint8Array = ZERO_SECRET,
+  pskSecret: Uint8Array = ZeroSecret,
 ): { readonly key: Uint8Array; readonly nonce: Uint8Array } {
   const welcomeSecret = deriveWelcomeSecret(provider, joinerSecret, pskSecret);
   try {
@@ -75,7 +75,7 @@ export function deriveEpochSecrets(
   previousInitSecret: Uint8Array,
   commitSecret: Uint8Array,
   encodedGroupContext: Uint8Array,
-  pskSecret: Uint8Array = ZERO_SECRET,
+  pskSecret: Uint8Array = ZeroSecret,
 ): MlsEpochSecrets {
   assertSecret(previousInitSecret, "previousInitSecret");
   assertSecret(commitSecret, "commitSecret");

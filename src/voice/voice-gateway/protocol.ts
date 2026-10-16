@@ -90,15 +90,15 @@ export function createVoiceGatewayUrl(endpoint: string): string {
   try {
     url = new URL(endpoint.includes("://") ? endpoint : `wss://${endpoint}`);
   } catch (cause) {
-    throw new VoiceError("VOICE_PROTOCOL_ERROR", {
+    throw new VoiceError("VoiceProtocolError", {
       cause,
-      metadata: { detail: "Discord returned an invalid Voice Gateway endpoint.", reason: "invalid-endpoint" },
+      metadata: { detail: "Discord returned an invalid Voice Gateway endpoint.", reason: "InvalidEndpoint" },
     });
   }
 
   if (url.protocol !== "wss:" || !url.hostname || url.username || url.password) {
-    throw new VoiceError("VOICE_PROTOCOL_ERROR", {
-      metadata: { detail: "Discord returned an invalid Voice Gateway endpoint.", reason: "invalid-endpoint" },
+    throw new VoiceError("VoiceProtocolError", {
+      metadata: { detail: "Discord returned an invalid Voice Gateway endpoint.", reason: "InvalidEndpoint" },
     });
   }
   url.pathname = "/";
@@ -156,10 +156,10 @@ export function parseVoiceGatewayClientDisconnect(data: unknown): string {
 export function selectVoiceTransportEncryptionMode(modes: readonly string[]): VoiceTransportEncryptionMode {
   if (modes.includes("aead_aes256_gcm_rtpsize")) return "aead_aes256_gcm_rtpsize";
   if (modes.includes("aead_xchacha20_poly1305_rtpsize")) return "aead_xchacha20_poly1305_rtpsize";
-  throw new VoiceError("VOICE_PROTOCOL_ERROR", {
+  throw new VoiceError("VoiceProtocolError", {
     metadata: {
       detail: "The Voice Gateway did not offer a supported transport encryption mode.",
-      reason: "unsupported-transport-encryption",
+      reason: "UnsupportedTransportEncryption",
     },
   });
 }
@@ -177,10 +177,10 @@ export function parseVoiceGatewaySessionDescription(
     throw protocolError("Voice Gateway Session Description secret_key must contain exactly 32 bytes.");
   }
   if (payload.dave_protocol_version > maxDaveProtocolVersion) {
-    throw new VoiceError("VOICE_PROTOCOL_ERROR", {
+    throw new VoiceError("VoiceProtocolError", {
       metadata: {
         detail: "The Voice Gateway selected an unsupported DAVE protocol version.",
-        reason: "unsupported-dave-version",
+        reason: "UnsupportedDaveVersion",
         daveProtocolVersion: payload.dave_protocol_version,
         maxDaveProtocolVersion,
       },
@@ -197,9 +197,9 @@ export function readHeartbeatNonce(data: unknown): number {
   return (data as { readonly t: number }).t;
 }
 
-export function classifyVoiceGatewayClose(code: number): "resume" | "fresh-server" | "terminal" {
+export function classifyVoiceGatewayClose(code: number): "resume" | "FreshServer" | "terminal" {
   if ([1000, 1001, 1005, 1006, 1011, 1012, 1013, 1014, 1015, 4015].includes(code)) return "resume";
-  if (code === 4006 || code === 4009 || code === 4011) return "fresh-server";
+  if (code === 4006 || code === 4009 || code === 4011) return "FreshServer";
   return "terminal";
 }
 
@@ -208,9 +208,9 @@ function decodeJsonMessage(value: string): VoiceGatewayJsonMessage {
   try {
     parsed = JSON.parse(value);
   } catch (cause) {
-    throw new VoiceError("VOICE_PROTOCOL_ERROR", {
+    throw new VoiceError("VoiceProtocolError", {
       cause,
-      metadata: { detail: "The Voice Gateway sent invalid JSON.", reason: "invalid-json" },
+      metadata: { detail: "The Voice Gateway sent invalid JSON.", reason: "InvalidJson" },
     });
   }
   const payload = parsed as VoiceGatewayJsonPayload;
@@ -226,11 +226,11 @@ async function toBinaryData(value: unknown): Promise<Uint8Array> {
 
 function assertOpcode(value: number): void {
   if (Number.isInteger(value) && value >= 0 && value <= 0xff) return;
-  throw new VoiceError("VOICE_INVALID_ARGUMENT", {
+  throw new VoiceError("VoiceInvalidArgument", {
     metadata: { detail: "A Voice Gateway opcode must be an unsigned 8-bit integer.", field: "opcode" },
   });
 }
 
-function protocolError(detail: string): VoiceError<"VOICE_PROTOCOL_ERROR"> {
-  return new VoiceError("VOICE_PROTOCOL_ERROR", { metadata: { detail } });
+function protocolError(detail: string): VoiceError<"VoiceProtocolError"> {
+  return new VoiceError("VoiceProtocolError", { metadata: { detail } });
 }

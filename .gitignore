@@ -7,5 +7,9 @@ dist
 # Dependency directories
 node_modules
 
+# Local Bun package cache (see bunfig.toml)
+.bun-cache
+bunfig.toml
+
 # Output of 'npm pack'
 *.tgz

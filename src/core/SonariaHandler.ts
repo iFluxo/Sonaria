@@ -1,4 +1,4 @@
-import { HTTP_REDIRECT_CODES, MAX_REDIRECT_DEPTH } from "../constant";
+import { HttpRedirectCodes, MaxRedirectDepth } from "../constant";
 import type { ExtractorPlugin } from "../struct/ExtractorPlugin";
 import type { InfoExtractorPlugin } from "../struct/InfoExtractorPlugin";
 import type { PlayableExtractorPlugin } from "../struct/PlayableExtractorPlugin";
@@ -10,15 +10,15 @@ import { PluginType } from "../type";
 import { isURL } from "../util";
 import { SonariaBase } from "./SonariaBase";
 
-const USER_AGENT =
+const UserAgent =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) " + "Chrome/129.0.0.0 Safari/537.3";
 
 /** Maps a {@link PluginType} to the plugin class implementing it. */
-export type PluginOfType<T extends PluginType> = T extends PluginType.EXTRACTOR
+export type PluginOfType<T extends PluginType> = T extends PluginType.Extractor
   ? ExtractorPlugin
-  : T extends PluginType.INFO_EXTRACTOR
+  : T extends PluginType.InfoExtractor
     ? InfoExtractorPlugin
-    : T extends PluginType.PLAYABLE_EXTRACTOR
+    : T extends PluginType.PlayableExtractor
       ? PlayableExtractorPlugin
       : SonariaPlugin;
 
@@ -47,7 +47,7 @@ export class SonariaHandler extends SonariaBase {
         const plugin =
           (await this._getPluginFromURL(input)) ||
           (await this._getPluginFromURL((input = await this.followRedirectLink(input))));
-        if (!plugin) throw new SonariaError("NOT_SUPPORTED_URL");
+        if (!plugin) throw new SonariaError("NotSupportedUrl");
         this.debug(`[${plugin.constructor.name}] Resolving from url: ${input}`);
         return plugin.resolve(input, options);
       }
@@ -55,10 +55,10 @@ export class SonariaHandler extends SonariaBase {
         const song = await this.#searchSong(input, options);
         if (song) return song;
       } catch {
-        throw new SonariaError("NO_RESULT", input);
+        throw new SonariaError("NoResult", input);
       }
     }
-    throw new SonariaError("CANNOT_RESOLVE_SONG", input);
+    throw new SonariaError("CannotResolveSong", input);
   }
 
   async _getPluginFromURL(url: string): Promise<SonariaPlugin | null> {
@@ -78,8 +78,8 @@ export class SonariaHandler extends SonariaBase {
   }
 
   async #searchSong(query: string, options: ResolveOptions = {}, getStreamURL = false): Promise<Song | null> {
-    const plugins = this.plugins.filter((p): p is ExtractorPlugin => p.type === PluginType.EXTRACTOR);
-    if (!plugins.length) throw new SonariaError("NO_EXTRACTOR_PLUGIN");
+    const plugins = this.plugins.filter((p): p is ExtractorPlugin => p.type === PluginType.Extractor);
+    if (!plugins.length) throw new SonariaError("NoExtractorPlugin");
     for (const plugin of plugins) {
       this.debug(`[${plugin.constructor.name}] Searching for song: ${query}`);
       const result = await plugin.searchSong(query, options);
@@ -99,33 +99,33 @@ export class SonariaHandler extends SonariaBase {
     if (song.stream.playFromSource) {
       if (song.stream.url) return;
       this.debug(`[SonariaHandler] Getting stream info: ${song}`);
-      const plugin = await this._getPluginFromSong(song, [PluginType.EXTRACTOR, PluginType.PLAYABLE_EXTRACTOR]);
-      if (!plugin) throw new SonariaError("NOT_SUPPORTED_SONG", song.toString());
+      const plugin = await this._getPluginFromSong(song, [PluginType.Extractor, PluginType.PlayableExtractor]);
+      if (!plugin) throw new SonariaError("NotSupportedSong", song.toString());
       this.debug(`[${plugin.constructor.name}] Getting stream URL: ${song}`);
       song.stream.url = await plugin.getStreamURL(song);
-      if (!song.stream.url) throw new SonariaError("CANNOT_GET_STREAM_URL", song.toString());
+      if (!song.stream.url) throw new SonariaError("CannotGetStreamUrl", song.toString());
     } else {
       if (song.stream.song?.stream?.playFromSource && song.stream.song.stream.url) return;
       this.debug(`[SonariaHandler] Getting stream info: ${song}`);
-      const plugin = await this._getPluginFromSong(song, [PluginType.INFO_EXTRACTOR]);
-      if (!plugin) throw new SonariaError("NOT_SUPPORTED_SONG", song.toString());
+      const plugin = await this._getPluginFromSong(song, [PluginType.InfoExtractor]);
+      if (!plugin) throw new SonariaError("NotSupportedSong", song.toString());
       this.debug(`[${plugin.constructor.name}] Creating search query for: ${song}`);
       const query = await plugin.createSearchQuery(song);
-      if (!query) throw new SonariaError("CANNOT_GET_SEARCH_QUERY", song.toString());
+      if (!query) throw new SonariaError("CannotGetSearchQuery", song.toString());
       const altSong = await this.#searchSong(query, { metadata: song.metadata, member: song.member }, true);
-      if (!altSong?.stream.playFromSource) throw new SonariaError("NO_RESULT", query || song.toString());
+      if (!altSong?.stream.playFromSource) throw new SonariaError("NoResult", query || song.toString());
       song.stream.song = altSong;
     }
   }
 
-  async followRedirectLink(url: string, maxRedirect = MAX_REDIRECT_DEPTH): Promise<string> {
+  async followRedirectLink(url: string, maxRedirect = MaxRedirectDepth): Promise<string> {
     if (maxRedirect === 0) return url;
     const res = await fetch(url, {
       method: "HEAD",
       redirect: "manual",
-      headers: { "user-agent": USER_AGENT },
+      headers: { "user-agent": UserAgent },
     });
-    if (HTTP_REDIRECT_CODES.has(res.status)) {
+    if (HttpRedirectCodes.has(res.status)) {
       const location = res.headers.get("location");
       if (!location) return url;
       return this.followRedirectLink(new URL(location, url).toString(), maxRedirect - 1);

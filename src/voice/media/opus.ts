@@ -1,14 +1,14 @@
 import { bytesStartWith, equalBytes } from "../bytes";
 
-export const OPUS_SAMPLE_RATE = 48_000;
-export const OPUS_SILENCE_FRAME = Uint8Array.of(0xf8, 0xff, 0xfe);
-export const OPUS_SILENCE_SAMPLES = 960;
-export const MAX_OPUS_PACKET_SIZE = 61_440;
+export const OpusSampleRate = 48_000;
+export const OpusSilenceFrame = Uint8Array.of(0xf8, 0xff, 0xfe);
+export const OpusSilenceSamples = 960;
+export const MaxOpusPacketSize = 61_440;
 
-const OPUS_HEAD = new TextEncoder().encode("OpusHead");
+const OpusHead = new TextEncoder().encode("OpusHead");
 
 export function assertDiscordOpusHead(packet: Uint8Array): void {
-  if (packet.byteLength < 19 || !bytesStartWith(packet, OPUS_HEAD) || packet[8] !== 1) {
+  if (packet.byteLength < 19 || !bytesStartWith(packet, OpusHead) || packet[8] !== 1) {
     throw new TypeError("The media stream does not contain a supported OpusHead packet.");
   }
   if (packet[9] !== 2) throw new TypeError("Discord playback requires a stereo Opus stream.");
@@ -16,7 +16,7 @@ export function assertDiscordOpusHead(packet: Uint8Array): void {
 }
 
 export function isOpusSilenceFrame(frame: Uint8Array): boolean {
-  return equalBytes(frame, OPUS_SILENCE_FRAME);
+  return equalBytes(frame, OpusSilenceFrame);
 }
 
 export function getOpusPacketSamples(packet: Uint8Array): number {

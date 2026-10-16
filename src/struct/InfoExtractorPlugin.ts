@@ -8,7 +8,7 @@ import type { Song } from "./Song";
  * This plugin only can extract the info from supported links, but not play song directly from its source
  */
 export abstract class InfoExtractorPlugin extends Plugin {
-  readonly type = PluginType.INFO_EXTRACTOR;
+  readonly type = PluginType.InfoExtractor;
   /**
    * Check if the url is working with this plugin
    * @param url - Input url

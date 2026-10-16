@@ -66,7 +66,7 @@ import {
 } from "./treekem";
 import { createDaveMlsWelcome, processDaveMlsWelcome } from "./welcome";
 
-const ZERO_SECRET = new Uint8Array(32);
+const ZeroSecret = new Uint8Array(32);
 
 export interface DaveMlsGroupInput {
   readonly groupId: Uint8Array;
@@ -292,7 +292,7 @@ export class DaveMlsGroup {
     if (applied.removedLeafIndexes.has(base.selfLeafIndex)) return undefined;
     const requiresPath = applied.removedLeafIndexes.size > 0;
     let createdPath: CreatedMlsUpdatePath | undefined;
-    let commitSecret: Uint8Array = ZERO_SECRET.slice();
+    let commitSecret: Uint8Array = ZeroSecret.slice();
     let privateKeys: Map<number, Uint8Array> | undefined;
     let basePrivateKeys: readonly (readonly [number, Uint8Array])[] | undefined;
     let pathPrivateKeys: ReadonlyMap<number, Uint8Array> | undefined;
@@ -429,7 +429,7 @@ export class DaveMlsGroup {
     }
 
     let processedPath: ProcessedMlsUpdatePath | undefined;
-    let commitSecret: Uint8Array = ZERO_SECRET.slice();
+    let commitSecret: Uint8Array = ZeroSecret.slice();
     let privateKeys: Map<number, Uint8Array> | undefined;
     let basePrivateKeys: readonly (readonly [number, Uint8Array])[] | undefined;
     let pathPrivateKeys: ReadonlyMap<number, Uint8Array> | undefined;

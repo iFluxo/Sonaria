@@ -11,10 +11,10 @@ import {
   NodeType,
 } from "./protocol";
 
-export const MAX_MLS_TREE_LEAVES = 0x8000_0000;
-export const MAX_MLS_TREE_NODES = 0xffff_ffff;
+export const MaxMlsTreeLeaves = 0x8000_0000;
+export const MaxMlsTreeNodes = 0xffff_ffff;
 
-const EMPTY = new Uint8Array();
+const Empty = new Uint8Array();
 
 export type MlsRatchetTree = readonly (MlsNode | undefined)[];
 
@@ -41,7 +41,7 @@ export function nodeWidth(leafCount: number): number {
 }
 
 export function leafNodeIndex(leafIndex: number): number {
-  assertUnsignedInteger(leafIndex, MAX_MLS_TREE_LEAVES - 1, "leafIndex");
+  assertUnsignedInteger(leafIndex, MaxMlsTreeLeaves - 1, "leafIndex");
   return 2 * leafIndex;
 }
 
@@ -107,7 +107,7 @@ export function copath(nodeIndex: number, leafCount: number): readonly number[] 
 
 export function assertRatchetTree(tree: MlsRatchetTree): void {
   if (!Array.isArray(tree)) throw new TypeError("MLS ratchet tree must be an array.");
-  if (tree.length > MAX_MLS_TREE_NODES) throw new RangeError("MLS ratchet tree exceeds the supported node limit.");
+  if (tree.length > MaxMlsTreeNodes) throw new RangeError("MLS ratchet tree exceeds the supported node limit.");
   if (tree.length > 0 && tree.at(-1) === undefined) {
     throw new TypeError("MLS ratchet tree must omit trailing blank nodes.");
   }
@@ -154,7 +154,7 @@ export function addLeaf(tree: MlsRatchetTree, leafNode: MlsLeafNode): AddLeafRes
   }
   let memberLeafIndex = findBlankLeaf(nodes, leafCount);
   if (memberLeafIndex === undefined) {
-    if (leafCount === MAX_MLS_TREE_LEAVES) throw new RangeError("MLS ratchet tree cannot be extended further.");
+    if (leafCount === MaxMlsTreeLeaves) throw new RangeError("MLS ratchet tree cannot be extended further.");
     memberLeafIndex = leafCount;
     leafCount *= 2;
     nodes.length = nodeWidth(leafCount);
@@ -358,7 +358,7 @@ function computeParentHashInternal(
   const excludedLeaves = new Set(node.parentNode.unmergedLeaves);
   const originalTree = excludeUnmergedLeaves(tree, excludedLeaves);
   const originalSiblingTreeHash = treeHashInternal(provider, originalTree, copathChildIndex, new Map());
-  const chainedParentHash = parentIndex === treeRoot(leafCount) ? EMPTY : node.parentNode.parentHash;
+  const chainedParentHash = parentIndex === treeRoot(leafCount) ? Empty : node.parentNode.parentHash;
   return provider.sha256(
     new MlsWriter()
       .vector(node.parentNode.encryptionKey)
@@ -418,7 +418,7 @@ export function logicalLeafCount(tree: MlsRatchetTree): number {
   const minimum = Math.ceil((tree.length + 1) / 2);
   let leafCount = 1;
   while (leafCount < minimum) leafCount *= 2;
-  if (leafCount > MAX_MLS_TREE_LEAVES) throw new RangeError("MLS ratchet tree exceeds the supported leaf limit.");
+  if (leafCount > MaxMlsTreeLeaves) throw new RangeError("MLS ratchet tree exceeds the supported leaf limit.");
   return leafCount;
 }
 
@@ -485,7 +485,7 @@ function assertNodeInTree(nodeIndex: number, leafCount: number): void {
 }
 
 function assertNodeIndex(nodeIndex: number): void {
-  assertUnsignedInteger(nodeIndex, MAX_MLS_TREE_NODES - 1, "nodeIndex");
+  assertUnsignedInteger(nodeIndex, MaxMlsTreeNodes - 1, "nodeIndex");
 }
 
 function assertPerfectTreeLeafCount(leafCount: number): void {
@@ -494,12 +494,12 @@ function assertPerfectTreeLeafCount(leafCount: number): void {
 }
 
 function assertLeafCount(leafCount: number, allowZero: boolean): void {
-  assertUnsignedInteger(leafCount, MAX_MLS_TREE_LEAVES, "leafCount");
+  assertUnsignedInteger(leafCount, MaxMlsTreeLeaves, "leafCount");
   if (!allowZero && leafCount === 0) throw new RangeError("leafCount must be positive.");
 }
 
 function toNodeIndex(value: bigint): number {
-  if (value < 0n || value >= BigInt(MAX_MLS_TREE_NODES)) throw new RangeError("nodeIndex is out of range.");
+  if (value < 0n || value >= BigInt(MaxMlsTreeNodes)) throw new RangeError("nodeIndex is out of range.");
   return Number(value);
 }
 

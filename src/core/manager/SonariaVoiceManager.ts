@@ -15,7 +15,7 @@ export class SonariaVoiceManager extends GuildIdManager<SonariaVoice> {
    */
   create(channel: AllGuildVoiceChannels): SonariaVoice {
     if (!isSupportedVoiceChannel(channel)) {
-      throw new SonariaError("INVALID_TYPE", "BaseGuildVoiceChannel", channel, "channel");
+      throw new SonariaError("InvalidType", "BaseGuildVoiceChannel", channel, "channel");
     }
     const existing = this.get(channel.guildId);
     if (existing) {
@@ -23,7 +23,7 @@ export class SonariaVoiceManager extends GuildIdManager<SonariaVoice> {
       return existing;
     }
     if (this.client.voice.connections.get(channel.guildId)) {
-      throw new SonariaError("VOICE_ALREADY_CREATED");
+      throw new SonariaError("VoiceAlreadyCreated");
     }
     return new SonariaVoice(this, channel);
   }

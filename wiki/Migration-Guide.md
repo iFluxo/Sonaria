@@ -53,9 +53,10 @@ lives in the `ffmpeg` option (`{ path, args }`) instead of a top-level option.
 
 ### 5. Events
 
-The `Events` enum is unchanged, except that `Events.EMPTY` was removed because Sonaria no longer
-tracks voice channel emptiness itself. Listen to `voiceStateUpdate` and use the exported
-`isVoiceChannelEmpty` helper instead - see [[Handling Seyfert Events]].
+The `Events` enum is unchanged, except that its members are now `PascalCase` (see
+[7. Naming conventions](#7-naming-conventions)) and the former `Events.EMPTY` member was removed
+because Sonaria no longer tracks voice channel emptiness itself. Listen to `voiceStateUpdate` and use
+the exported `isVoiceChannelEmpty` helper instead - see [[Handling Seyfert Events]].
 
 ### 6. Queue control
 
@@ -67,6 +68,23 @@ by `sonaria.getQueue(guild)` instead:
 const queue = sonaria.getQueue(guild);
 await queue.pause();
 ```
+
+### 7. Naming conventions
+
+Every library-owned identifier and string literal that used `SNAKE_CASE` or `kebab-case` now uses
+`PascalCase`:
+
+- Enum members: `Events.ADD_SONG` → `Events.AddSong`, `RepeatMode.DISABLED` → `RepeatMode.Disabled`,
+  `PluginType.INFO_EXTRACTOR` → `PluginType.InfoExtractor`.
+- `PluginType` values: `"extractor"` → `"Extractor"`, `"info-extractor"` → `"InfoExtractor"`,
+  `"playable-extractor"` → `"PlayableExtractor"`.
+- `SonariaError#errorCode`: `"NO_QUEUE"` → `"NoQueue"`, `"INVALID_TYPE"` → `"InvalidType"`, …
+- `VoiceError#code`: `"VOICE_NOT_CONNECTED"` → `"VoiceNotConnected"`, …
+- Voice connection state/destroy reasons: `"explicit-disconnect"` → `"ExplicitDisconnect"`, …
+
+Values defined by external specifications keep their original casing: Discord gateway wire keys such
+as `heartbeat_interval`, MLS/HPKE labels such as `shared_secret`, cipher suites such as `aes-256-gcm`,
+and HTTP header/encoding names such as `user-agent`.
 
 ## From DisTube v4 or older
 

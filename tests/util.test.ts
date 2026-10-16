@@ -224,8 +224,8 @@ describe("resolveGuildId()", () => {
     expect(testFn({ guild: { id: GUILD_ID, name: "X" } } as never)).toBe(GUILD_ID);
   });
   test("throws for invalid input", () => {
-    expectError(() => testFn(client as never), "INVALID_TYPE");
-    expectError(() => testFn(1 as never), "INVALID_TYPE");
+    expectError(() => testFn(client as never), "InvalidType");
+    expectError(() => testFn(1 as never), "InvalidType");
   });
 });
 
@@ -269,7 +269,7 @@ describe("isVoicePluginInstalled() and checkVoicePlugin()", () => {
     expect(isVoicePluginInstalled(client)).toBe(false);
   });
   test("throws when the plugin is missing", () => {
-    expectError(() => checkVoicePlugin(client), "VOICE_PLUGIN_MISSING");
+    expectError(() => checkVoicePlugin(client), "VoicePluginMissing");
     expect(() => checkVoicePlugin(withVoice)).not.toThrow();
   });
 });
@@ -289,9 +289,9 @@ describe("checkInvalidKey()", () => {
   const target = { a: 0, b: 1 };
   const name = "target";
   test("throws for invalid argument keys", () => {
-    expectError(() => checkInvalidKey(0 as never, [], name), "INVALID_TYPE");
-    expectError(() => checkInvalidKey(target, ["b"], name), "INVALID_KEY");
-    expectError(() => checkInvalidKey(target, { a: undefined }, name), "INVALID_KEY");
+    expectError(() => checkInvalidKey(0 as never, [], name), "InvalidType");
+    expectError(() => checkInvalidKey(target, ["b"], name), "InvalidKey");
+    expectError(() => checkInvalidKey(target, { a: undefined }, name), "InvalidKey");
   });
   test("accepts valid keys", () => {
     expect(checkInvalidKey(target, { a: 0, b: 0, c: 0 }, name)).toBeUndefined();

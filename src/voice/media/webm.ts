@@ -1,6 +1,6 @@
 import { concatenateBytes } from "../bytes";
 import { AsyncByteReader, type VoiceByteInput } from "./input";
-import { assertDiscordOpusHead, MAX_OPUS_PACKET_SIZE } from "./opus";
+import { assertDiscordOpusHead, MaxOpusPacketSize } from "./opus";
 import type { VoicePlaybackSource } from "./playback";
 
 const WebmElementId = Object.freeze({
@@ -288,7 +288,7 @@ function readUnsigned(bytes: Uint8Array): number {
 
 function copyNonEmptyFrame(frame: Uint8Array): Uint8Array {
   if (frame.byteLength === 0) throw new TypeError("A WebM Opus frame cannot be empty.");
-  if (frame.byteLength > MAX_OPUS_PACKET_SIZE) {
+  if (frame.byteLength > MaxOpusPacketSize) {
     throw new TypeError("A WebM Opus frame exceeds the supported size limit.");
   }
   return frame.slice();

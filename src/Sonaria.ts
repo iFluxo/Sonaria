@@ -68,7 +68,7 @@ export class Sonaria extends TypedEmitter<TypedSonariaEvents> {
   constructor(client: SonariaClient, options: SonariaOptions = {}) {
     super();
     this.setMaxListeners(1);
-    if (!isClientInstance(client)) throw new SonariaError("INVALID_TYPE", "Client", client, "client");
+    if (!isClientInstance(client)) throw new SonariaError("InvalidType", "Client", client, "client");
     this.client = client;
     checkVoicePlugin(client);
     this.options = new Options(options);
@@ -114,9 +114,9 @@ export class Sonaria extends TypedEmitter<TypedSonariaEvents> {
     options: PlayOptions<T> = {},
   ): Promise<void> {
     if (!isSupportedVoiceChannel(voiceChannel)) {
-      throw new SonariaError("INVALID_TYPE", "BaseGuildVoiceChannel", voiceChannel, "voiceChannel");
+      throw new SonariaError("InvalidType", "BaseGuildVoiceChannel", voiceChannel, "voiceChannel");
     }
-    if (!isObject(options)) throw new SonariaError("INVALID_TYPE", "object", options, "options");
+    if (!isObject(options)) throw new SonariaError("InvalidType", "object", options, "options");
 
     const { textChannel: providedTextChannel, member: providedMember, skip = false, message, metadata } = options;
     const member = providedMember ?? this.client.cache.members?.get(this.client.botId, voiceChannel.guildId);
@@ -124,13 +124,13 @@ export class Sonaria extends TypedEmitter<TypedSonariaEvents> {
     const position = Number(options.position) || (skip ? 1 : 0);
 
     if (message && !isMessageInstance(message)) {
-      throw new SonariaError("INVALID_TYPE", ["Message", "a falsy value"], message, "options.message");
+      throw new SonariaError("InvalidType", ["Message", "a falsy value"], message, "options.message");
     }
     if (textChannel && !isTextChannelInstance(textChannel)) {
-      throw new SonariaError("INVALID_TYPE", "AllGuildTextableChannels", textChannel, "options.textChannel");
+      throw new SonariaError("InvalidType", "AllGuildTextableChannels", textChannel, "options.textChannel");
     }
     if (member && !isMemberInstance(member)) {
-      throw new SonariaError("INVALID_TYPE", "GuildMember", member, "options.member");
+      throw new SonariaError("InvalidType", "GuildMember", member, "options.member");
     }
 
     const queue = this.getQueue(voiceChannel) || (await this.queues.create(voiceChannel, textChannel));
@@ -143,19 +143,19 @@ export class Sonaria extends TypedEmitter<TypedSonariaEvents> {
       if (resolved instanceof Playlist) {
         if (!this.options.nsfw && !isNsfw) {
           resolved.songs = resolved.songs.filter(s => !s.ageRestricted);
-          if (!resolved.songs.length) throw new SonariaError("EMPTY_FILTERED_PLAYLIST");
+          if (!resolved.songs.length) throw new SonariaError("EmptyFilteredPlaylist");
         }
-        if (!resolved.songs.length) throw new SonariaError("EMPTY_PLAYLIST");
+        if (!resolved.songs.length) throw new SonariaError("EmptyPlaylist");
         this.debug(`[${queue.id}] Adding playlist to queue: ${resolved.songs.length} songs`);
         queue.addToQueue(resolved.songs, position);
-        if (!isFirstSong || this.options.emitAddListWhenCreatingQueue) this.emit(Events.ADD_LIST, queue, resolved);
+        if (!isFirstSong || this.options.emitAddListWhenCreatingQueue) this.emit(Events.AddList, queue, resolved);
       } else {
         if (!this.options.nsfw && resolved.ageRestricted && !isNsfw) {
-          throw new SonariaError("NON_NSFW");
+          throw new SonariaError("NonNsfw");
         }
         this.debug(`[${queue.id}] Adding song to queue: ${resolved}`);
         queue.addToQueue(resolved, position);
-        if (!isFirstSong || this.options.emitAddSongWhenCreatingQueue) this.emit(Events.ADD_SONG, queue, resolved);
+        if (!isFirstSong || this.options.emitAddSongWhenCreatingQueue) this.emit(Events.AddSong, queue, resolved);
       }
 
       if (isFirstSong) await queue.play();
@@ -173,14 +173,14 @@ export class Sonaria extends TypedEmitter<TypedSonariaEvents> {
   async createCustomPlaylist(songs: (string | Song)[], options: CustomPlaylistOptions = {}): Promise<Playlist> {
     const { member, parallel, metadata, name, source, url, thumbnail } = options;
     if (!Array.isArray(songs)) {
-      throw new SonariaError("INVALID_TYPE", "Array<Song | string>", songs, "songs");
+      throw new SonariaError("InvalidType", "Array<Song | string>", songs, "songs");
     }
-    if (!songs.length) throw new SonariaError("EMPTY_ARRAY", "songs");
+    if (!songs.length) throw new SonariaError("EmptyArray", "songs");
     if (member && !isMemberInstance(member)) {
-      throw new SonariaError("INVALID_TYPE", "GuildMember", member, "options.member");
+      throw new SonariaError("InvalidType", "GuildMember", member, "options.member");
     }
     const validSongs = songs.filter((song): song is Song | string => song instanceof Song || isURL(song));
-    if (!validSongs.length) throw new SonariaError("NO_VALID_SONG");
+    if (!validSongs.length) throw new SonariaError("NoValidSong");
     const resolvedSongs: Song[] = [];
     if (parallel === false) {
       for (const song of validSongs) {
@@ -215,7 +215,7 @@ export class Sonaria extends TypedEmitter<TypedSonariaEvents> {
 
   #getQueue(guild: GuildIdResolvable): Queue {
     const queue = this.getQueue(guild);
-    if (!queue) throw new SonariaError("NO_QUEUE");
+    if (!queue) throw new SonariaError("NoQueue");
     return queue;
   }
 
@@ -319,14 +319,14 @@ export class Sonaria extends TypedEmitter<TypedSonariaEvents> {
    * Emit an error event
    */
   emitError(error: Error, queue: Queue, song?: Song): void {
-    this.emit(Events.ERROR, error, queue, song);
+    this.emit(Events.Error, error, queue, song);
   }
 
   /**
    * Emit a debug event
    */
   debug(message: string): void {
-    this.emit(Events.DEBUG, message);
+    this.emit(Events.Debug, message);
   }
 }
 

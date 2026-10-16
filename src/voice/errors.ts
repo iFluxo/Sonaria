@@ -1,16 +1,16 @@
 import { SeyfertError, type SeyfertErrorCode } from "seyfert";
 
 export type VoiceErrorCode =
-  | "VOICE_INVALID_ARGUMENT"
-  | "VOICE_NOT_CONNECTED"
-  | "VOICE_MOVE_REQUIRED"
-  | "VOICE_OPERATION_CONFLICT"
-  | "VOICE_OPERATION_TIMEOUT"
-  | "VOICE_CONNECTION_DESTROYED"
-  | "VOICE_CONNECTION_FAILED"
-  | "VOICE_PROTOCOL_ERROR"
-  | "VOICE_RUNTIME_UNSUPPORTED"
-  | "VOICE_VERIFICATION_UNAVAILABLE";
+  | "VoiceInvalidArgument"
+  | "VoiceNotConnected"
+  | "VoiceMoveRequired"
+  | "VoiceOperationConflict"
+  | "VoiceOperationTimeout"
+  | "VoiceConnectionDestroyed"
+  | "VoiceConnectionFailed"
+  | "VoiceProtocolError"
+  | "VoiceRuntimeUnsupported"
+  | "VoiceVerificationUnavailable";
 
 export interface VoiceErrorOptions {
   metadata?: Record<string, unknown>;

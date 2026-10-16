@@ -8,7 +8,7 @@ import type { Song } from "./Song";
  * This plugin can extract and play song from supported links, but cannot search for songs from its source
  */
 export abstract class PlayableExtractorPlugin extends Plugin {
-  readonly type = PluginType.PLAYABLE_EXTRACTOR;
+  readonly type = PluginType.PlayableExtractor;
   /**
    * Check if the url is working with this plugin
    * @param url - Input url

@@ -1,6 +1,6 @@
 import { equalBytes } from "../bytes";
 import { VoiceCryptoProvider } from "../crypto/provider";
-import { isOpusSilenceFrame, MAX_OPUS_PACKET_SIZE } from "../media/opus";
+import { isOpusSilenceFrame, MaxOpusPacketSize } from "../media/opus";
 import { DaveMlsGroup, type DaveMlsOutboundCommit } from "../mls/group";
 import type { MlsExternalSender } from "../mls/protocol";
 import { copyDaveExternalSender, equalDaveExternalSenders } from "../mls/state";
@@ -97,7 +97,7 @@ interface DaveReceiveEpochContext {
   expiresAt?: number;
 }
 
-const DAVE_TRANSITION_RETENTION_MS = 10_000;
+const DaveTransitionRetentionMs = 10_000;
 
 class DaveSessionEngine implements DaveSession {
   readonly maxProtocolVersion = 1;
@@ -223,13 +223,13 @@ class DaveSessionEngine implements DaveSession {
     this.assertOpen();
     const group = this.#authoritativeGroup;
     if (!group || group.epoch === undefined || group.epoch === 0n) {
-      throw new DaveVerificationError("participant_not_present");
+      throw new DaveVerificationError("ParticipantNotPresent");
     }
     let participantKey: Uint8Array;
     try {
       participantKey = group.getVerificationKey(userId);
     } catch (error) {
-      throw new DaveVerificationError("participant_not_present", { cause: error });
+      throw new DaveVerificationError("ParticipantNotPresent", { cause: error });
     }
     let code: string;
     try {
@@ -239,20 +239,20 @@ class DaveSessionEngine implements DaveSession {
         { userId, publicKey: participantKey },
       );
     } catch (error) {
-      throw new DaveVerificationError("derivation_failed", { cause: error });
+      throw new DaveVerificationError("DerivationFailed", { cause: error });
     }
     // Pairwise derivation is asynchronous, so the group and participant key must still be current.
     if (this.#authoritativeGroup !== group) {
-      throw new DaveVerificationError("participant_changed");
+      throw new DaveVerificationError("ParticipantChanged");
     }
     let currentKey: Uint8Array;
     try {
       currentKey = group.getVerificationKey(userId);
     } catch (error) {
-      throw new DaveVerificationError("participant_changed", { cause: error });
+      throw new DaveVerificationError("ParticipantChanged", { cause: error });
     }
     if (!equalBytes(currentKey, participantKey)) {
-      throw new DaveVerificationError("participant_changed");
+      throw new DaveVerificationError("ParticipantChanged");
     }
     return code;
   }
@@ -271,12 +271,12 @@ class DaveSessionEngine implements DaveSession {
     if (isOpusSilenceFrame(frame)) return frame.slice();
     const parsed = parseDaveAudioFrame(frame);
     if (!parsed) {
-      return this.receivePassthroughAllowed() && frame.byteLength <= MAX_OPUS_PACKET_SIZE ? frame.slice() : undefined;
+      return this.receivePassthroughAllowed() && frame.byteLength <= MaxOpusPacketSize ? frame.slice() : undefined;
     }
     this.cleanupReceiveEpochs();
     for (const context of this.#receiveEpochs) {
       const decrypted = context.decryptors.get(userId)?.decrypt(parsed);
-      if (decrypted && decrypted.byteLength <= MAX_OPUS_PACKET_SIZE) return decrypted;
+      if (decrypted && decrypted.byteLength <= MaxOpusPacketSize) return decrypted;
       decrypted?.fill(0);
     }
     return undefined;
@@ -503,7 +503,7 @@ class DaveSessionEngine implements DaveSession {
       this.installAudioEncryptor(transition.group);
     }
     if (previousProtocolVersion === 0) {
-      this.#receivePassthroughUntil = Date.now() + DAVE_TRANSITION_RETENTION_MS;
+      this.#receivePassthroughUntil = Date.now() + DaveTransitionRetentionMs;
     }
     if (changed || !this.#ready) this.markReady();
   }
@@ -652,7 +652,7 @@ class DaveSessionEngine implements DaveSession {
   }
 
   private markReceiveEpochsExpiring(): void {
-    const expiresAt = Date.now() + DAVE_TRANSITION_RETENTION_MS;
+    const expiresAt = Date.now() + DaveTransitionRetentionMs;
     for (const context of this.#receiveEpochs) {
       context.expiresAt = Math.min(context.expiresAt ?? Number.POSITIVE_INFINITY, expiresAt);
     }

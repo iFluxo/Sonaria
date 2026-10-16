@@ -18,7 +18,7 @@ export class QueueManager extends GuildIdManager<Queue> {
    * @param textChannel  - The default text channel of the queue
    */
   async create(voiceChannel: AllGuildVoiceChannels, textChannel?: AllGuildTextableChannels): Promise<Queue> {
-    if (this.has(voiceChannel.guildId)) throw new SonariaError("QUEUE_EXIST");
+    if (this.has(voiceChannel.guildId)) throw new SonariaError("QueueExist");
     const voice = this.voices.create(voiceChannel);
     const queue = new Queue(this.sonaria, voice, textChannel);
     await queue._taskQueue.queuing();
@@ -28,7 +28,7 @@ export class QueueManager extends GuildIdManager<Queue> {
       await voice.join();
       this.#voiceEventHandler(queue);
       this.add(queue.id, queue);
-      this.emit(Events.INIT_QUEUE, queue);
+      this.emit(Events.InitQueue, queue);
       return queue;
     } finally {
       queue._taskQueue.resolve();
@@ -43,7 +43,7 @@ export class QueueManager extends GuildIdManager<Queue> {
     queue._listeners = {
       disconnect: error => {
         queue.remove();
-        this.emit(Events.DISCONNECT, queue);
+        this.emit(Events.Disconnect, queue);
         if (error) this.emitError(error, queue, queue.songs?.[0]);
       },
       error: error => void this.#handlePlayingError(queue, error),
@@ -66,13 +66,13 @@ export class QueueManager extends GuildIdManager<Queue> {
     }
     this.debug(`[${queue.id}] Handling song finish`);
     const song = queue.songs[0];
-    this.emit(Events.FINISH_SONG, queue, song);
+    this.emit(Events.FinishSong, queue, song);
     await queue._taskQueue.queuing();
     try {
       if (queue.stopped) return;
-      if (queue.repeatMode === RepeatMode.QUEUE) queue.songs.push(song);
+      if (queue.repeatMode === RepeatMode.Queue) queue.songs.push(song);
 
-      if (queue.repeatMode !== RepeatMode.SONG) {
+      if (queue.repeatMode !== RepeatMode.Song) {
         const prev = queue.songs.shift() as Song;
         if (this.options.savePreviousSongs) queue.previousSongs.push(prev);
         else queue.previousSongs.push({ id: prev.id } as Song);
@@ -85,14 +85,14 @@ export class QueueManager extends GuildIdManager<Queue> {
         } catch (e: unknown) {
           const errorMessage = e instanceof Error ? e.message : String(e);
           this.debug(`[${queue.id}] Add related song error: ${errorMessage}`);
-          if (e instanceof SonariaError) this.emit(Events.NO_RELATED, queue, e);
-          else this.emit(Events.NO_RELATED, queue, new SonariaError("NO_RELATED"));
+          if (e instanceof SonariaError) this.emit(Events.NoRelated, queue, e);
+          else this.emit(Events.NoRelated, queue, new SonariaError("NoRelated"));
         }
       }
 
       if (queue.songs.length === 0) {
         this.debug(`[${queue.id}] Queue is empty, stopping...`);
-        if (!queue.autoplay) this.emit(Events.FINISH, queue);
+        if (!queue.autoplay) this.emit(Events.Finish, queue);
         queue.remove();
         return;
       }
@@ -133,7 +133,7 @@ export class QueueManager extends GuildIdManager<Queue> {
   /**
    * Play a song on the voice connection with the queue properties
    * @param queue        - The guild queue to play
-   * @param emitPlaySong - Whether or not to emit the {@link Events.PLAY_SONG} event
+   * @param emitPlaySong - Whether or not to emit the {@link Events.PlaySong} event
    */
   async playSong(queue: Queue, emitPlaySong = true): Promise<void> {
     if (queue.stopped || queue.songs.length === 0) {
@@ -147,7 +147,7 @@ export class QueueManager extends GuildIdManager<Queue> {
       const willPlaySong = song.stream.playFromSource ? song : song.stream.song;
       const stream = willPlaySong?.stream;
       if (!willPlaySong || !stream?.playFromSource || !stream.url) {
-        throw new SonariaError("NO_STREAM_URL", `${song}`);
+        throw new SonariaError("NoStreamUrl", `${song}`);
       }
       this.debug(`[${queue.id}] Creating SonariaStream for: ${willPlaySong}`);
       const filterArgs = queue.filters.ffmpegArgs.af;
@@ -166,10 +166,10 @@ export class QueueManager extends GuildIdManager<Queue> {
       };
       queue._beginTime = 0;
       const sonariaStream = new SonariaStream(stream.url, streamOptions);
-      sonariaStream.on("debug", data => this.emit(Events.FFMPEG_DEBUG, `[${queue.id}] ${data}`));
+      sonariaStream.on("debug", data => this.emit(Events.FfmpegDebug, `[${queue.id}] ${data}`));
       this.debug(`[${queue.id}] Started playing: ${willPlaySong}`);
       await queue.voice.play(sonariaStream);
-      if (emitPlaySong) this.emit(Events.PLAY_SONG, queue, song);
+      if (emitPlaySong) this.emit(Events.PlaySong, queue, song);
     } catch (e: unknown) {
       const error = e instanceof Error ? e : new Error(String(e));
       await this.#handlePlayingError(queue, error);

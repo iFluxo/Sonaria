@@ -41,8 +41,8 @@ export type VoiceGatewayObservation = VoiceGatewayStateObservation | VoiceGatewa
 export function getGatewayClientUserId(client: VoiceGatewayClient): string {
   const userId = client.me?.id;
   if (typeof userId !== "string") {
-    throw new VoiceError("VOICE_CONNECTION_FAILED", {
-      metadata: { detail: "The Seyfert client must be ready before connecting to voice.", reason: "client-not-ready" },
+    throw new VoiceError("VoiceConnectionFailed", {
+      metadata: { detail: "The Seyfert client must be ready before connecting to voice.", reason: "ClientNotReady" },
     });
   }
   return userId;
@@ -77,10 +77,10 @@ export async function sendGatewayVoiceState(
     return client.sendGatewayPayload(shardId, payload);
   }
 
-  throw new VoiceError("VOICE_RUNTIME_UNSUPPORTED", {
+  throw new VoiceError("VoiceRuntimeUnsupported", {
     metadata: {
       detail: "Voice requires a Seyfert Client or a WorkerClient with sendGatewayPayload().",
-      reason: "gateway-send-unavailable",
+      reason: "GatewaySendUnavailable",
     },
   });
 }
@@ -94,7 +94,7 @@ export function parseVoiceGatewayObservation(
     const data: GatewayVoiceStateUpdateDispatchData = packet.d;
     if (data.user_id !== clientUserId) return null;
     if (data.guild_id === undefined) {
-      throw new VoiceError("VOICE_PROTOCOL_ERROR", {
+      throw new VoiceError("VoiceProtocolError", {
         metadata: { detail: "A voice state update must belong to a guild." },
       });
     }

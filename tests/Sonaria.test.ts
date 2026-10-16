@@ -68,7 +68,7 @@ const createClient = () => ({
 });
 
 const createPlugin = (overrides: Record<string, unknown> = {}) => ({
-  type: PluginType.EXTRACTOR,
+  type: PluginType.Extractor,
   sonaria: undefined as unknown,
   init(sonaria: Sonaria) {
     this.sonaria = sonaria;
@@ -264,7 +264,7 @@ describe("Sonaria#play()", () => {
   test("emits addSong for the first song", async () => {
     const { sonaria } = createSonaria();
     const added = new Promise<Song>(resolve => {
-      sonaria.on(Events.ADD_SONG, (_queue, song) => resolve(song as Song));
+      sonaria.on(Events.AddSong, (_queue, song) => resolve(song as Song));
     });
     await sonaria.play(makeVoiceChannel(), "https://example.com/song");
     expect(await added).toBeInstanceOf(Song);

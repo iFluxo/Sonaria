@@ -60,20 +60,20 @@ import { Events } from "sonaria";
 import { sonaria } from "./sonaria.js";
 
 sonaria
-  .on(Events.PLAY_SONG, (queue, song) =>
+  .on(Events.PlaySong, (queue, song) =>
     queue.textChannel?.messages.write({
       content: `Playing \`${song.name}\` - \`${song.formattedDuration}\`\nRequested by: ${song.user}`,
     }),
   )
-  .on(Events.ADD_SONG, (queue, song) =>
+  .on(Events.AddSong, (queue, song) =>
     queue.textChannel?.messages.write({
       content: `Added \`${song.name}\` - \`${song.formattedDuration}\` to the queue`,
     }),
   )
-  .on(Events.ERROR, (error, queue) =>
+  .on(Events.Error, (error, queue) =>
     queue.textChannel?.messages.write({ content: `An error occurred: ${error.message}` }),
   )
-  .on(Events.FINISH, queue =>
+  .on(Events.Finish, queue =>
     queue.textChannel?.messages.write({ content: "Queue finished!" }),
   );
 ```
@@ -165,7 +165,7 @@ try {
   await context.editOrReply({ content: `Error: ${(error as Error).message}` });
 }
 
-sonaria.on(Events.ERROR, (error, queue, song) => {
+sonaria.on(Events.Error, (error, queue, song) => {
   queue.textChannel?.messages.write({ content: `Error playing ${song?.name}: ${error.message}` });
 });
 ```
@@ -177,7 +177,7 @@ Sonaria is written in TypeScript and provides full type definitions:
 ```ts
 import { Events, type Queue, type Song } from "sonaria";
 
-sonaria.on(Events.PLAY_SONG, (queue: Queue, song: Song) => {
+sonaria.on(Events.PlaySong, (queue: Queue, song: Song) => {
   // Full type support
 });
 ```
@@ -188,7 +188,7 @@ Leave voice channels when appropriate to free up resources:
 
 ```ts
 // Leave when the queue finishes
-sonaria.on(Events.FINISH, queue => {
+sonaria.on(Events.Finish, queue => {
   queue.voice.leave();
 });
 
@@ -213,7 +213,7 @@ export default createEvent({
 Set default queue properties using the `initQueue` event:
 
 ```ts
-sonaria.on(Events.INIT_QUEUE, queue => {
+sonaria.on(Events.InitQueue, queue => {
   queue.autoplay = false; // Disable autoplay
   queue.setVolume(50); // Set the default volume
   queue.setRepeatMode(0); // Disable repeat

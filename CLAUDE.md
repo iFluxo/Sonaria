@@ -28,6 +28,12 @@ bun run format        # Format code (biome format --write)
 bun run type          # Type check (tsc --noEmit)
 ```
 
+> **Overlay/proot filesystems:** Bun's default `hardlink` backend can silently produce truncated or
+> missing package files on these mounts. This repository keeps its package cache next to
+> `node_modules` (`bunfig.toml`) and the `pre-push` hook installs with `--backend=copyfile`, which is
+> slower but deterministic. If a plain `bun install` ever leaves `node_modules` incomplete, run
+> `bun install --backend=copyfile`.
+
 ## Project Structure
 
 ```
@@ -105,15 +111,15 @@ Three plugin types with different capabilities:
 Audio and timing constants are defined in `src/constant.ts`:
 
 ```typescript
-AUDIO_SAMPLE_RATE = 48_000     // Hz
-AUDIO_CHANNELS = 2             // Stereo
-AUDIO_BITRATE = "128k"
-DEFAULT_VOLUME = 50            // 0-100%
-JOIN_TIMEOUT_MS = 30_000       // 30 seconds
-RECONNECT_TIMEOUT_MS = 5_000   // 5 seconds
-RECONNECT_MAX_ATTEMPTS = 5     // Max rejoin attempts
-HTTP_REDIRECT_CODES            // Set of redirect status codes
-MAX_REDIRECT_DEPTH = 5         // Max redirect follows
+AudioSampleRate = 48_000     // Hz
+AudioChannels = 2             // Stereo
+AudioBitrate = "128k"
+DefaultVolume = 50            // 0-100%
+JoinTimeoutMs = 30_000       // 30 seconds
+ReconnectTimeoutMs = 5_000   // 5 seconds
+ReconnectMaxAttempts = 5     // Max rejoin attempts
+HttpRedirectCodes            // Set of redirect status codes
+MaxRedirectDepth = 5         // Max redirect follows
 ```
 
 Always use these constants instead of magic numbers. The exported `version` must stay in sync with
@@ -154,7 +160,7 @@ catch (e: any) {
 - Classes: PascalCase (`SonariaVoice`, `QueueManager`)
 - Methods/Properties: camelCase (`getQueue`, `playSong`)
 - Private fields: prefix with `#` or `_` for internal (`#getQueue`, `_beginTime`)
-- Constants: UPPER_SNAKE_CASE (`AUDIO_SAMPLE_RATE`, `DEFAULT_VOLUME`)
+- Constants: UPPER_SNAKE_CASE (`AudioSampleRate`, `DefaultVolume`)
 - Enums: PascalCase with UPPER_SNAKE_CASE members
 
 ## Error Handling
@@ -164,27 +170,27 @@ Custom error class with predefined error codes and messages:
 
 ```typescript
 // Static error (no parameters)
-throw new SonariaError("NO_QUEUE");
+throw new SonariaError("NoQueue");
 
 // Template error (with parameters)
-throw new SonariaError("INVALID_TYPE", "string", actualValue, "paramName");
-throw new SonariaError("FFMPEG_EXITED", exitCode);
+throw new SonariaError("InvalidType", "string", actualValue, "paramName");
+throw new SonariaError("FfmpegExited", exitCode);
 ```
 
 `SonariaError#errorCode` (alias `#code`) holds the code, and `#name` is `"SonariaError"`.
 
 ### Error Codes
 Key categories:
-- Type validation: `INVALID_TYPE`, `EMPTY_ARRAY`, `EMPTY_STRING`, `INVALID_KEY`
-- Voice operations: `NOT_IN_VOICE`, `VOICE_FULL`, `VOICE_CONNECT_FAILED`, `VOICE_PLUGIN_MISSING`
-- Queue operations: `NO_QUEUE`, `QUEUE_EXIST`, `NO_PREVIOUS`, `NO_UP_NEXT`, `NO_SONG_POSITION`
-- Playback: `UNAVAILABLE_VIDEO`, `UNPLAYABLE_FORMATS`, `NON_NSFW`, `NO_STREAM_URL`
+- Type validation: `InvalidType`, `EmptyArray`, `EmptyString`, `InvalidKey`
+- Voice operations: `NotInVoice`, `VoiceFull`, `VoiceConnectFailed`, `VoicePluginMissing`
+- Queue operations: `NoQueue`, `QueueExist`, `NoPrevious`, `NoUpNext`, `NoSongPosition`
+- Playback: `UnavailableVideo`, `UnplayableFormats`, `NonNsfw`, `NoStreamUrl`
 
 ### Validation Patterns
 Use the guards from `src/util.ts`:
 ```typescript
 if (!isSupportedVoiceChannel(channel)) {
-  throw new SonariaError("INVALID_TYPE", "BaseGuildVoiceChannel", channel, "voiceChannel");
+  throw new SonariaError("InvalidType", "BaseGuildVoiceChannel", channel, "voiceChannel");
 }
 checkInvalidKey(options, validKeys, "options");
 ```

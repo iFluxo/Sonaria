@@ -62,10 +62,10 @@ export interface VoiceRecoveringState {
 }
 
 export type VoiceConnectionDestroyReason =
-  | "explicit-disconnect"
-  | "external-disconnect"
-  | "terminal-failure"
-  | "plugin-teardown";
+  | "ExplicitDisconnect"
+  | "ExternalDisconnect"
+  | "TerminalFailure"
+  | "PluginTeardown";
 
 export interface VoiceDestroyedState {
   readonly status: "destroyed";

@@ -1,5 +1,5 @@
 /** @internal */
-export type DaveVerificationErrorReason = "participant_not_present" | "participant_changed" | "derivation_failed";
+export type DaveVerificationErrorReason = "ParticipantNotPresent" | "ParticipantChanged" | "DerivationFailed";
 
 /** @internal */
 export class DaveVerificationError extends Error {
@@ -15,11 +15,11 @@ export class DaveVerificationError extends Error {
 
 function verificationErrorMessage(reason: DaveVerificationErrorReason): string {
   switch (reason) {
-    case "participant_not_present":
+    case "ParticipantNotPresent":
       return "The requested DAVE participant is unavailable.";
-    case "participant_changed":
+    case "ParticipantChanged":
       return "The requested DAVE participant changed during verification.";
-    case "derivation_failed":
+    case "DerivationFailed":
       return "The DAVE verification code derivation failed.";
   }
 }

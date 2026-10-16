@@ -1,7 +1,7 @@
 import { VoiceError } from "../errors";
 
-const DEFAULT_MAX_BUFFERED_PACKETS = 32;
-const MAX_BUFFERED_PACKETS = 1_024;
+const DefaultMaxBufferedPackets = 32;
+const MaxBufferedPackets = 1_024;
 
 export interface VoiceReceiveOptions {
   /**
@@ -96,7 +96,7 @@ export class VoiceAudioReceiver {
   subscribe(userId: string, options: VoiceReceiveOptions): VoiceReceiveStream {
     if (this.#closed) throw new Error("The voice audio receiver is closed.");
     if (!options || typeof options !== "object") {
-      throw new VoiceError("VOICE_INVALID_ARGUMENT", {
+      throw new VoiceError("VoiceInvalidArgument", {
         metadata: { detail: "Voice receive options must be an object.", field: "options", received: options },
       });
     }
@@ -126,11 +126,11 @@ export class VoiceAudioReceiver {
 }
 
 function resolveMaxBufferedPackets(value: number | undefined): number {
-  if (value === undefined) return DEFAULT_MAX_BUFFERED_PACKETS;
-  if (Number.isInteger(value) && value > 0 && value <= MAX_BUFFERED_PACKETS) return value;
-  throw new VoiceError("VOICE_INVALID_ARGUMENT", {
+  if (value === undefined) return DefaultMaxBufferedPackets;
+  if (Number.isInteger(value) && value > 0 && value <= MaxBufferedPackets) return value;
+  throw new VoiceError("VoiceInvalidArgument", {
     metadata: {
-      detail: `maxBufferedPackets must be an integer from 1 through ${MAX_BUFFERED_PACKETS}.`,
+      detail: `maxBufferedPackets must be an integer from 1 through ${MaxBufferedPackets}.`,
       field: "maxBufferedPackets",
       received: value,
     },
