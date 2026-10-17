@@ -190,7 +190,7 @@ export class Queue extends SonariaBase {
   }
 
   /**
-   * Get or set the stream volume. Default value: `50`.
+   * Get or set the stream volume. Default value: `100`.
    */
   get volume() {
     return this.voice.volume;

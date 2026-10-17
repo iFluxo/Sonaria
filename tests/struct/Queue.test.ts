@@ -267,7 +267,7 @@ describe("Queue", () => {
   describe("volume", () => {
     test("get/set delegates to the voice connection", () => {
       const { queue } = createQueue();
-      expect(queue.volume).toBe(50);
+      expect(queue.volume).toBe(100);
       expect(queue.setVolume(75)).toBe(queue);
       expect(queue.volume).toBe(75);
     });
