@@ -114,7 +114,7 @@ Audio and timing constants are defined in `src/constant.ts`:
 AudioSampleRate = 48_000     // Hz
 AudioChannels = 2             // Stereo
 AudioBitrate = "128k"
-DefaultVolume = 50            // 0-100%
+DefaultVolume = 100            // 0-100%
 JoinTimeoutMs = 30_000       // 30 seconds
 ReconnectTimeoutMs = 5_000   // 5 seconds
 ReconnectMaxAttempts = 5     // Max rejoin attempts

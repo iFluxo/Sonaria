@@ -19,7 +19,7 @@ export const AudioBitrate = "128k";
 /**
  * Default volume percentage (0-100).
  */
-export const DefaultVolume = 50;
+export const DefaultVolume = 100;
 
 /**
  * Timeout constants (in milliseconds).
