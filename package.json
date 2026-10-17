@@ -1,6 +1,6 @@
 {
   "name": "sonaria",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A powerful Seyfert music library with a native Discord voice implementation, plugin architecture, and integrated FFmpeg audio filters.",
   "type": "module",
   "main": "./dist/index.js",
